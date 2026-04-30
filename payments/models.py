@@ -32,3 +32,15 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.user.email} -> {self.course.title}"
+
+class LessonProgress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='lesson_progress', on_delete=models.CASCADE)
+    lesson = models.ForeignKey('courses.Lesson', related_name='progress', on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'lesson')
+
+    def __str__(self):
+        return f"{self.user.email} - {self.lesson.title} - {'Done' if self.is_completed else 'Pending'}"

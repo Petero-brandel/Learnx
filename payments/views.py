@@ -81,3 +81,55 @@ class PaystackWebhookView(views.APIView):
             )
 
         return Response(status=status.HTTP_200_OK)
+
+class MarkLessonCompleteView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        lesson_id = request.data.get('lesson_id')
+        try:
+            from courses.models import Lesson
+            lesson = Lesson.objects.get(id=lesson_id)
+        except Lesson.DoesNotExist:
+            return Response({'error': 'Lesson not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if user is actually enrolled
+        try:
+            enrollment = Enrollment.objects.get(user=request.user, course=lesson.module.course)
+        except Enrollment.DoesNotExist:
+            return Response({'error': 'Not enrolled in this course'}, status=status.HTTP_403_FORBIDDEN)
+
+        from .models import LessonProgress
+        # Mark lesson as complete
+        progress, created = LessonProgress.objects.get_or_create(
+            user=request.user,
+            lesson=lesson,
+            defaults={'is_completed': True}
+        )
+        if not created and not progress.is_completed:
+            progress.is_completed = True
+            progress.save()
+
+        # Recalculate course progress percentage
+        total_lessons = Lesson.objects.filter(module__course=lesson.module.course).count()
+        completed_lessons = LessonProgress.objects.filter(
+            user=request.user, 
+            lesson__module__course=lesson.module.course, 
+            is_completed=True
+        ).count()
+
+        new_percentage = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+        
+        # Update enrollment progress
+        enrollment.progress_percentage = new_percentage
+        enrollment.save()
+
+        # If 100%, trigger certificate generation
+        if new_percentage == 100:
+            from django_q.tasks import async_task
+            async_task('certificates.tasks.generate_certificate_task', request.user.id, lesson.module.course.id)
+
+        return Response({
+            'status': 'success',
+            'progress_percentage': new_percentage
+        })
