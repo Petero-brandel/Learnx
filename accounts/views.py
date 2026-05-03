@@ -105,6 +105,14 @@ class GoogleAuthView(APIView):
                 user.profile_photo = profile_photo
                 user.save(update_fields=['profile_photo'])
 
+            # Send welcome email for brand new Google signups
+            if created:
+                try:
+                    from emails.tasks import send_welcome_email_task
+                    send_welcome_email_task(user.id)
+                except Exception as e:
+                    print(f"Failed to send welcome email (Google Auth): {str(e)}")
+
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
 
@@ -133,6 +141,14 @@ class VerifyEmailView(APIView):
             user.is_email_verified = True
             user.verification_token = None
             user.save(update_fields=['is_email_verified', 'verification_token'])
+            
+            # Send welcome email now that the user is verified
+            try:
+                from emails.tasks import send_welcome_email_task
+                send_welcome_email_task(user.id)
+            except Exception as e:
+                print(f"Failed to send welcome email (Verify): {str(e)}")
+                
             return Response({'message': 'Email verified successfully. You can now log in.'})
         except User.DoesNotExist:
             return Response({'error': 'Invalid or expired verification token.'}, status=status.HTTP_400_BAD_REQUEST)
