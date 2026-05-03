@@ -26,6 +26,7 @@ class Enrollment(models.Model):
     course = models.ForeignKey(Course, related_name='enrollments', on_delete=models.CASCADE)
     enrolled_at = models.DateTimeField(auto_now_add=True)
     progress_percentage = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True, help_text="Can the user currently access this course?")
 
     class Meta:
         unique_together = ('user', 'course') # A user can only enroll in a course once
@@ -44,3 +45,35 @@ class LessonProgress(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.lesson.title} - {'Done' if self.is_completed else 'Pending'}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Enrollment)
+def create_enrollment_notification(sender, instance, created, **kwargs):
+    if created:
+        from notifications.models import Notification
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # 1. Notify student
+        Notification.objects.create(
+            user=instance.user,
+            title="Course Unlocked! 🚀",
+            message=f"You now have full access to {instance.course.title}. Happy learning!",
+            notification_type='enrollment'
+        )
+        
+        # Dispatch HTML Email
+        from django_q.tasks import async_task
+        async_task('emails.tasks.send_purchase_email_task', instance.user.id, instance.course.id)
+        
+        # 2. Notify admin
+        admins = User.objects.filter(is_superuser=True)
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                title="New Sale! 💰",
+                message=f"{instance.user.email} just enrolled in {instance.course.title}.",
+                notification_type='sale'
+            )

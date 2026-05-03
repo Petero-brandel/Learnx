@@ -26,7 +26,16 @@ def generate_certificate_task(user_id, course_id):
         filename = f"{user.id}_{course.slug}_certificate.pdf"
         cert.pdf_file.save(filename, pdf_file)
         
-        # TODO: Send Email via Resend with PDF attached
-        # send_certificate_email(user.email, cert.pdf_file.url)
+        # Dispatch HTML Email with attachment
+        from django_q.tasks import async_task
+        async_task('emails.tasks.send_certificate_email_task', user.id, course.id, cert.pdf_file.path)
+        
+        from notifications.models import Notification
+        Notification.objects.create(
+            user=user,
+            title="Certificate Ready! 🏆",
+            message=f"Congratulations! Your certificate for {course.title} has been generated.",
+            notification_type='achievement'
+        )
         
     return str(cert.certificate_id)

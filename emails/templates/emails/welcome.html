@@ -1,0 +1,14 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2 style="color: #1e293b; margin-top: 0;">Welcome to LearnX! 🎉</h2>
+    <p>Hi {{ user.first_name|default:user.email }},</p>
+    <p>We are absolutely thrilled to have you join our learning community. LearnX was built to provide you with the highest quality education and a premium learning experience.</p>
+    <p>You can browse our catalog of premium courses and start learning right away.</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ login_url }}" class="btn">Go to Dashboard</a>
+    </div>
+    
+    <p style="margin-top: 30px;">Happy Learning,<br>Coach Izu</p>
+{% endblock %}

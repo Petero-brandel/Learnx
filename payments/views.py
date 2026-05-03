@@ -96,6 +96,8 @@ class MarkLessonCompleteView(views.APIView):
         # Check if user is actually enrolled
         try:
             enrollment = Enrollment.objects.get(user=request.user, course=lesson.module.course)
+            if not enrollment.is_active:
+                return Response({'error': 'Your access to this course has been deactivated.'}, status=status.HTTP_403_FORBIDDEN)
         except Enrollment.DoesNotExist:
             return Response({'error': 'Not enrolled in this course'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -133,3 +135,24 @@ class MarkLessonCompleteView(views.APIView):
             'status': 'success',
             'progress_percentage': new_percentage
         })
+
+class MyEnrollmentsView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Fetch active enrollments for the logged-in student
+        enrollments = Enrollment.objects.filter(user=request.user, is_active=True).select_related('course')
+        
+        data = []
+        for e in enrollments:
+            data.append({
+                'enrollment_id': e.id,
+                'course_id': e.course.id,
+                'course_title': e.course.title,
+                'course_slug': e.course.slug,
+                'course_thumbnail': e.course.thumbnail,
+                'progress_percentage': e.progress_percentage,
+                'enrolled_at': e.enrolled_at
+            })
+            
+        return Response(data, status=status.HTTP_200_OK)
