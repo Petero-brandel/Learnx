@@ -59,7 +59,7 @@ def create_enrollment_notification(sender, instance, created, **kwargs):
         # 1. Notify student
         Notification.objects.create(
             user=instance.user,
-            title="Course Unlocked! 🚀",
+            title="Course Unlocked",
             message=f"You now have full access to {instance.course.title}. Happy learning!",
             notification_type='enrollment'
         )
@@ -73,7 +73,7 @@ def create_enrollment_notification(sender, instance, created, **kwargs):
         for admin in admins:
             Notification.objects.create(
                 user=admin,
-                title="New Sale! 💰",
+                title="New Sale",
                 message=f"{instance.user.email} just enrolled in {instance.course.title}.",
                 notification_type='sale'
             )

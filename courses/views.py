@@ -20,6 +20,21 @@ class CourseViewSet(viewsets.ModelViewSet):
             return CourseListSerializer
         return CourseDetailSerializer
 
+    def get_serializer_context(self):
+        """
+        Inject enrolled_course_ids into serializer context so LessonSerializer
+        can check enrollment efficiently without N+1 queries per lesson.
+        """
+        context = super().get_serializer_context()
+        user = self.request.user
+        if user.is_authenticated and not user.is_staff:
+            from payments.models import Enrollment
+            context['enrolled_course_ids'] = set(
+                Enrollment.objects.filter(user=user, is_active=True)
+                .values_list('course_id', flat=True)
+            )
+        return context
+
     def get_queryset(self):
         # Public users only see published courses. Admin sees all.
         if self.request.user.is_staff:

@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 
 from .models import Payment, Enrollment
 from courses.models import Course
-from .paystack import initialize_transaction, verify_signature
+from .paystack import initialize_transaction, verify_signature, verify_transaction
 
 class CheckoutView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -38,7 +38,40 @@ class CheckoutView(views.APIView):
             )
             return Response({'authorization_url': auth_url})
         
-        return Response({'error': 'Failed to initialize payment'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': 'Failed to initialize payment. Please check if your PAYSTACK_SECRET_KEY is valid in the .env file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyPaymentView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        reference = request.query_params.get('reference')
+        if not reference:
+            return Response({'error': 'No reference provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payment = Payment.objects.get(reference=reference, user=request.user)
+        except Payment.DoesNotExist:
+            return Response({'error': 'Invalid payment reference'}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment.status == 'success':
+            return Response({'status': 'already verified', 'message': 'Course is ready!'})
+
+        # Call Paystack to verify
+        is_success, data = verify_transaction(reference)
+
+        if is_success:
+            payment.status = 'success'
+            payment.paystack_id = str(data.get('id', ''))
+            payment.save()
+
+            # Auto-enroll the user
+            Enrollment.objects.get_or_create(
+                user=payment.user,
+                course=payment.course
+            )
+            return Response({'status': 'success', 'message': 'Payment verified successfully.'})
+        
+        return Response({'error': 'Payment verification failed or pending.'}, status=status.HTTP_400_BAD_REQUEST)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class PaystackWebhookView(views.APIView):
