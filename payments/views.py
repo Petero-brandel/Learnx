@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 
 from .models import Payment, Enrollment
 from courses.models import Course
-from .paystack import initialize_transaction, verify_signature
+from .paystack import initialize_transaction, verify_signature, verify_payment_status
 
 class CheckoutView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -19,6 +19,10 @@ class CheckoutView(views.APIView):
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if already enrolled
+        if Enrollment.objects.filter(user=request.user, course=course, is_active=True).exists():
+            return Response({'error': 'You are already enrolled in this course.', 'code': 'already_enrolled'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Generate a unique reference
         reference = f"LX-{uuid.uuid4().hex[:12].upper()}"
@@ -156,3 +160,38 @@ class MyEnrollmentsView(views.APIView):
             })
             
         return Response(data, status=status.HTTP_200_OK)
+
+class VerifyPaymentView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        reference = request.query_params.get('reference')
+        if not reference:
+            return Response({'error': 'Reference is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payment = Payment.objects.get(reference=reference, user=request.user)
+        except Payment.DoesNotExist:
+            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment.status == 'success':
+            return Response({'status': 'success', 'message': 'Payment already verified.'})
+
+        # Sync verification from Paystack directly
+        paystack_data = verify_payment_status(reference)
+        
+        if paystack_data and paystack_data.get('status') == True:
+            data = paystack_data.get('data', {})
+            if data.get('status') == 'success':
+                payment.status = 'success'
+                payment.paystack_id = str(data.get('id', ''))
+                payment.save()
+                
+                # Auto-enroll the user
+                Enrollment.objects.get_or_create(
+                    user=payment.user,
+                    course=payment.course
+                )
+                return Response({'status': 'success', 'message': 'Payment verified successfully.'})
+                
+        return Response({'error': 'Payment verification failed'}, status=status.HTTP_400_BAD_REQUEST)
