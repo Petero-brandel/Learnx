@@ -1,4 +1,6 @@
 import os
+import hashlib
+import time
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,9 +68,18 @@ class LessonViewSet(viewsets.ModelViewSet):
             # Save the GUID to the lesson so we know which video it belongs to
             lesson.video_id = guid
             lesson.save()
+            library_id = os.environ.get('BUNNY_LIBRARY_ID')
+            api_key = os.environ.get('BUNNY_API_KEY')
+            expiration_time = int(time.time()) + 3600
+            
+            signature_str = f"{library_id}{api_key}{expiration_time}{guid}"
+            signature = hashlib.sha256(signature_str.encode()).hexdigest()
+
             return Response({
                 'video_id': guid,
-                'library_id': os.environ.get('BUNNY_LIBRARY_ID')
+                'library_id': library_id,
+                'authorization_signature': signature,
+                'authorization_expire': expiration_time
             })
         
         return Response({'error': 'Failed to communicate with Bunny Stream.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

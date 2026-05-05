@@ -4,14 +4,14 @@ from .models import Course, Module, Lesson
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'content_type', 'video_id', 'text_content', 'file_url', 'order', 'is_preview']
+        fields = ['id', 'module', 'title', 'content_type', 'video_id', 'text_content', 'file_url', 'order', 'is_preview']
 
 class ModuleSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
 
     class Meta:
         model = Module
-        fields = ['id', 'title', 'order', 'lessons']
+        fields = ['id', 'course', 'title', 'order', 'lessons']
 
 class CourseDetailSerializer(serializers.ModelSerializer):
     modules = ModuleSerializer(many=True, read_only=True)
