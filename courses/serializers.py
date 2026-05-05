@@ -21,9 +21,11 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'slug', 'description', 'price', 'thumbnail', 'is_published', 'created_at', 'updated_at', 'modules']
 
 class CourseListSerializer(serializers.ModelSerializer):
+    modules = ModuleSerializer(many=True, read_only=True)
+
     class Meta:
         model = Course
-        fields = ['id', 'title', 'slug', 'price', 'thumbnail', 'is_published']
+        fields = ['id', 'title', 'slug', 'description', 'price', 'thumbnail', 'is_published', 'created_at', 'modules']
 
 class LessonReorderSerializer(serializers.Serializer):
     lesson_ids = serializers.ListField(
