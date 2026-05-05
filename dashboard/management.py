@@ -5,11 +5,36 @@ from django.contrib.auth import get_user_model
 from django_q.tasks import async_task
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Count
 
 from payments.models import Payment, Enrollment
 from courses.models import Course
 
 User = get_user_model()
+
+
+class StudentListView(views.APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        students = (
+            User.objects
+            .filter(is_staff=False, is_superuser=False)
+            .annotate(enrollment_count=Count('enrollment'))
+            .order_by('-date_joined')
+        )
+        data = []
+        for s in students:
+            data.append({
+                'id': s.id,
+                'email': s.email,
+                'full_name': s.full_name or '',
+                'date_joined': s.date_joined,
+                'is_active': s.is_active,
+                'is_email_verified': s.is_email_verified,
+                'enrollment_count': s.enrollment_count,
+            })
+        return Response(data)
 
 class ManualUserRegistrationView(views.APIView):
     permission_classes = [IsAdminUser]

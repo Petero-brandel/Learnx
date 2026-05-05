@@ -1,5 +1,7 @@
 import json
 import uuid
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -7,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 from .models import Payment, Enrollment
+from certificates.models import Certificate
 from courses.models import Course
 from .paystack import initialize_transaction, verify_signature, verify_payment_status
 
@@ -132,8 +135,23 @@ class MarkLessonCompleteView(views.APIView):
 
         # If 100%, trigger certificate generation
         if new_percentage == 100:
-            from django_q.tasks import async_task
-            async_task('certificates.tasks.generate_certificate_task', request.user.id, lesson.module.course.id)
+            course = lesson.module.course
+            should_queue = False
+
+            with transaction.atomic():
+                cert, _ = Certificate.objects.select_for_update().get_or_create(
+                    user=request.user,
+                    course=course,
+                )
+
+                if not cert.pdf_file and not cert.generation_requested_at:
+                    cert.generation_requested_at = timezone.now()
+                    cert.save(update_fields=['generation_requested_at'])
+                    should_queue = True
+
+            if should_queue:
+                from django_q.tasks import async_task
+                async_task('certificates.tasks.generate_certificate_task', request.user.id, course.id)
 
         return Response({
             'status': 'success',

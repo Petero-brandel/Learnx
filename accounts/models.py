@@ -61,10 +61,6 @@ def create_welcome_notification(sender, instance, created, **kwargs):
             notification_type='system'
         )
         
-        # Dispatch HTML Email
-        from django_q.tasks import async_task
-        async_task('emails.tasks.send_welcome_email_task', instance.id)
-        
         # 2. Notify the Admin (Coach Izu)
         admins = CustomUser.objects.filter(is_superuser=True)
         for admin in admins:

@@ -8,6 +8,8 @@ class Certificate(models.Model):
     course = models.ForeignKey(Course, related_name='certificates', on_delete=models.CASCADE)
     certificate_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     pdf_file = models.FileField(upload_to='certificates/', blank=True, null=True)
+    generation_requested_at = models.DateTimeField(blank=True, null=True)
+    email_sent_at = models.DateTimeField(blank=True, null=True)
     issued_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

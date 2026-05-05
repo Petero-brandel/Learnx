@@ -97,9 +97,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+db_url = os.environ.get('DATABASE_URL')
+if not db_url and os.environ.get('DB_HOST'):
+    user = os.environ.get('DB_USER')
+    password = os.environ.get('DB_PASSWORD')
+    host = os.environ.get('DB_HOST')
+    port = os.environ.get('DB_PORT', '5432')
+    name = os.environ.get('DB_NAME')
+    db_url = f"postgresql://{user}:{password}@{host}:{port}/{name}"
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+        default=db_url or f'sqlite:///{BASE_DIR / "db.sqlite3"}',
         conn_max_age=600
     )
 }

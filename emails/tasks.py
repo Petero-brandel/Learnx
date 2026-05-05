@@ -1,9 +1,12 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.db import transaction
+from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from courses.models import Course
+from certificates.models import Certificate
 
 User = get_user_model()
 
@@ -27,7 +30,7 @@ def send_html_email(subject, template_name, context, recipient_list, attachment_
         with open(attachment_path, 'rb') as pdf_file:
             email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
             
-    email.send(fail_silently=False)
+    email.send(fail_silently=True)
 
 def send_welcome_email_task(user_id):
     user = User.objects.get(id=user_id)
@@ -56,14 +59,33 @@ def send_purchase_email_task(user_id, course_id):
 def send_certificate_email_task(user_id, course_id, pdf_path):
     user = User.objects.get(id=user_id)
     course = Course.objects.get(id=course_id)
-    
-    send_html_email(
-        subject="Certificate Ready! 🏆",
-        template_name="certificate.html",
-        context={'user': user, 'course': course},
-        recipient_list=[user.email],
-        attachment_path=pdf_path
-    )
+
+    with transaction.atomic():
+        cert, _ = Certificate.objects.select_for_update().get_or_create(user=user, course=course)
+
+        if cert.email_sent_at:
+            return
+
+        send_html_email(
+            subject="Certificate Ready! 🏆",
+            template_name="certificate.html",
+            context={'user': user, 'course': course},
+            recipient_list=[user.email],
+            attachment_path=pdf_path
+        )
+
+        cert.email_sent_at = timezone.now()
+        cert.save(update_fields=['email_sent_at'])
+
+        from notifications.models import Notification
+        Notification.objects.get_or_create(
+            user=user,
+            title="Certificate Ready! 🏆",
+            defaults={
+                'message': f"Congratulations! Your certificate for {course.title} has been generated.",
+                'notification_type': 'achievement',
+            }
+        )
 
 def send_verification_email_task(user_id):
     user = User.objects.get(id=user_id)

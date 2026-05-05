@@ -1,6 +1,6 @@
 from django.urls import path
 from .analytics import RevenueStatsView, UserStatsView, CoursePerformanceView, RecentActivityView
-from .management import ManualUserRegistrationView, ManualEnrollmentView, ManualCertificateView, BroadcastEmailView, EnrollmentManagementView
+from .management import ManualUserRegistrationView, ManualEnrollmentView, ManualCertificateView, BroadcastEmailView, EnrollmentManagementView, StudentListView
 
 urlpatterns = [
     # Analytics
@@ -15,4 +15,5 @@ urlpatterns = [
     path('management/enrollments/', EnrollmentManagementView.as_view(), name='dashboard-enrollment-management'),
     path('management/generate-certificate/', ManualCertificateView.as_view(), name='dashboard-manual-certificate'),
     path('management/broadcast-email/', BroadcastEmailView.as_view(), name='dashboard-broadcast-email'),
+    path('management/students/', StudentListView.as_view(), name='dashboard-student-list'),
 ]
