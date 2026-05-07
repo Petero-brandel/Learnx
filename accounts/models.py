@@ -34,6 +34,8 @@ class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     profile_photo = models.URLField(max_length=1024, blank=True, null=True) # URL from Bunny Stream or Google Auth
+    is_email_verified = models.BooleanField(default=False)
+    verification_token = models.CharField(max_length=64, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']
@@ -42,3 +44,29 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+# Trigger notifications on new user registration
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=CustomUser)
+def create_welcome_notification(sender, instance, created, **kwargs):
+    if created:
+        from notifications.models import Notification
+        # 1. Welcome the student
+        Notification.objects.create(
+            user=instance,
+            title="Welcome to LearnX! 🎉",
+            message="We are thrilled to have you here. Browse our courses and start learning today!",
+            notification_type='system'
+        )
+        
+        # 2. Notify the Admin (Coach Izu)
+        admins = CustomUser.objects.filter(is_superuser=True)
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                title="New Student Registration",
+                message=f"{instance.email} just joined the platform!",
+                notification_type='system'
+            )

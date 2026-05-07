@@ -1,0 +1,16 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2 style="color: #1e293b; margin-top: 0;">Certificate Ready! 🏆</h2>
+    <p>Hi {{ user.first_name|default:user.email }},</p>
+    <p>Congratulations! We have verified that you successfully completed 100% of <strong>{{ course.title }}</strong>.</p>
+    <p>Your hard work and dedication have paid off. Attached to this email is your official, high-resolution certificate of completion.</p>
+    
+    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 25px 0; color: #92400e;">
+        <strong>Pro Tip:</strong> You can upload this certificate directly to the "Licenses & certifications" section of your LinkedIn profile!
+    </div>
+    
+    <p>We are incredibly proud of your achievement.</p>
+    
+    <p style="margin-top: 30px;">Best Regards,<br>Coach Izu</p>
+{% endblock %}

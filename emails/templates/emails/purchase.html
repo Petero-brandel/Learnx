@@ -1,0 +1,21 @@
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2 style="color: #1e293b; margin-top: 0;">Course Unlocked! 🚀</h2>
+    <p>Hi {{ user.first_name|default:user.email }},</p>
+    <p>Your payment was successful and your enrollment is complete. You now have full, lifetime access to <strong>{{ course.title }}</strong>.</p>
+    
+    <div style="background-color: #f1f5f9; padding: 20px; border-radius: 6px; margin: 25px 0;">
+        <h3 style="margin-top: 0; color: #334155;">Order Details</h3>
+        <ul style="list-style-type: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 10px;"><strong>Course:</strong> {{ course.title }}</li>
+            <li><strong>Amount Paid:</strong> ₦{{ course.price }}</li>
+        </ul>
+    </div>
+    
+    <p>Your journey begins now. Log into your dashboard to start watching the first lesson!</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ course_url }}" class="btn">Start Learning</a>
+    </div>
+{% endblock %}

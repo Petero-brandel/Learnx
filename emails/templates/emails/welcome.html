@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 8px; text-align: left; }
+        .button { display: inline-block; padding: 14px 28px; background-color: #ec4899; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; margin-bottom: 20px; text-align: center; width: 100%; box-sizing: border-box; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        .highlight { color: #ec4899; font-weight: 600; }
+        .advice-box { background: white; border-left: 4px solid #ec4899; padding: 15px; margin: 20px 0; border-radius: 0 4px 4px 0; font-style: italic; color: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Welcome to <span class="highlight">LearnX!</span> 🎉</h2>
+        </div>
+        <div class="content">
+            <p>Hi {% if user.full_name %}{{ user.full_name }}{% else %}there{% endif %},</p>
+            
+            <p>Your account has been successfully created. We are absolutely thrilled to welcome you to the LearnX community!</p>
+            
+            <p>You have taken a fantastic first step toward mastering your goals. We want to assure you that our entire platform is designed to make your learning journey as smooth, effective, and rewarding as possible. Whether you're here to upskill, pivot your career, or satisfy your curiosity, you are exactly where you need to be.</p>
+            
+            <div class="advice-box">
+                "The expert in anything was once a beginner. Take it one lesson at a time, stay consistent, and don't be afraid to ask questions. Your future self will thank you for the work you put in today."
+            </div>
+            
+            <p>Ready to dive in and explore the catalog?</p>
+            
+            <a href="{{ login_url }}" class="button">Log in to LearnX</a>
+            
+            <p style="font-size: 14px; margin-top: 25px;">
+                Happy learning,<br>
+                <strong>The LearnX Team</strong>
+            </p>
+        </div>
+        <div class="footer">
+            <p>&copy; {% now "Y" %} LearnX Academy. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
