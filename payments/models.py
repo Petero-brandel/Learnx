@@ -46,6 +46,23 @@ class LessonProgress(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.lesson.title} - {'Done' if self.is_completed else 'Pending'}"
 
+
+class QuizAttempt(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='quiz_attempts', on_delete=models.CASCADE)
+    quiz = models.ForeignKey('courses.Quiz', related_name='attempts', on_delete=models.CASCADE)
+    score = models.PositiveIntegerField(help_text="Score as percentage 0-100")
+    passed = models.BooleanField(default=False)
+    answers = models.JSONField(default=dict, help_text='{"question_id": selected_answer_id}')
+    started_at = models.DateTimeField(null=True, blank=True)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+    time_taken_seconds = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-attempted_at']
+
+    def __str__(self):
+        return f"{self.user.email} - Quiz {self.quiz.id} - {self.score}% {'✓' if self.passed else '✗'}"
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 

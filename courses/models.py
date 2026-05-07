@@ -56,3 +56,45 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"{self.module.title} - {self.title}"
+
+
+class Quiz(models.Model):
+    lesson = models.OneToOneField(Lesson, related_name='quiz', on_delete=models.CASCADE)
+    passing_score = models.PositiveIntegerField(default=70, help_text="Minimum % to pass")
+    max_attempts = models.PositiveIntegerField(default=0, help_text="0 = unlimited attempts")
+    time_limit_minutes = models.PositiveIntegerField(default=0, help_text="0 = no time limit")
+    is_required = models.BooleanField(default=True, help_text="Must pass to mark lesson complete")
+    show_correct_answers = models.BooleanField(default=True, help_text="Reveal correct answers after submission")
+    shuffle_questions = models.BooleanField(default=False, help_text="Randomize question order per attempt")
+    shuffle_answers = models.BooleanField(default=False, help_text="Randomize answer order per attempt")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Quiz for: {self.lesson.title}"
+
+
+class Question(models.Model):
+    QUESTION_TYPES = (
+        ('multiple_choice', 'Multiple Choice'),
+        ('true_false', 'True / False'),
+    )
+
+    quiz = models.ForeignKey(Quiz, related_name='questions', on_delete=models.CASCADE)
+    text = models.TextField()
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='multiple_choice')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"Q{self.order}: {self.text[:50]}"
+
+
+class Answer(models.Model):
+    question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
+    text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{'✓' if self.is_correct else '✗'} {self.text[:50]}"
