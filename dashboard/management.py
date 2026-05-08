@@ -20,7 +20,7 @@ class StudentListView(views.APIView):
         students = (
             User.objects
             .filter(is_staff=False, is_superuser=False)
-            .annotate(enrollment_count=Count('enrollment'))
+            .annotate(enrollment_count=Count('enrollments'))
             .order_by('-date_joined')
         )
         data = []

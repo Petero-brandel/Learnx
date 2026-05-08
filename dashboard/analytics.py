@@ -28,18 +28,45 @@ class RevenueStatsView(views.APIView):
         month_rev = successful_payments.filter(created_at__gte=month_start).aggregate(Sum('amount'))['amount__sum'] or 0
         all_time_rev = successful_payments.aggregate(Sum('amount'))['amount__sum'] or 0
 
-        # Revenue over time (Last 30 days)
-        thirty_days_ago = today_start - timedelta(days=30)
-        revenue_over_time = list(successful_payments.filter(created_at__gte=thirty_days_ago)
-            .extra(select={'day': 'date(created_at)'})
-            .values('day')
-            .annotate(total=Sum('amount'))
-            .order_by('day'))
+        # Revenue over time
+        period = request.query_params.get('period', '7d')
+        if period == '1y':
+            start_date = today_start - timedelta(days=365)
+            from django.db.models.functions import TruncMonth
+            rev_qs = list(successful_payments.filter(created_at__gte=start_date)
+                .annotate(month=TruncMonth('created_at'))
+                .values('month')
+                .annotate(total=Sum('amount'))
+                .order_by('month'))
+            
+            revenue_over_time = []
+            for item in rev_qs:
+                if item['month']:
+                    revenue_over_time.append({
+                        'day': item['month'].strftime('%Y-%m-%d'),
+                        'total': item['total']
+                    })
+        else:
+            days_map = {'7d': 7, '14d': 14, '30d': 30}
+            days = days_map.get(period, 7)
+            start_date = today_start - timedelta(days=days-1)
+            revenue_over_time = list(successful_payments.filter(created_at__gte=start_date)
+                .extra(select={'day': 'date(created_at)'})
+                .values('day')
+                .annotate(total=Sum('amount'))
+                .order_by('day'))
 
         # Revenue per course
-        rev_per_course = list(successful_payments.values(course_title=F('course__title'))
+        rev_per_course_qs = list(successful_payments.values(course_title_raw=F('course__title'))
             .annotate(total=Sum('amount'))
             .order_by('-total'))
+            
+        rev_per_course = []
+        for item in rev_per_course_qs:
+            rev_per_course.append({
+                'course_title': item['course_title_raw'] or 'Deleted Course',
+                'total': item['total']
+            })
 
         return Response({
             'revenue': {
@@ -58,15 +85,36 @@ class UserStatsView(views.APIView):
     def get(self, request, *args, **kwargs):
         total_users = User.objects.count()
         
-        # Signups over time (Last 30 days)
+        # Signups over time
         today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        thirty_days_ago = today_start - timedelta(days=30)
+        period = request.query_params.get('period', '7d')
         
-        signups_over_time = list(User.objects.filter(date_joined__gte=thirty_days_ago)
-            .extra(select={'day': 'date(date_joined)'})
-            .values('day')
-            .annotate(count=Count('id'))
-            .order_by('day'))
+        if period == '1y':
+            start_date = today_start - timedelta(days=365)
+            from django.db.models.functions import TruncMonth
+            signups_qs = list(User.objects.filter(date_joined__gte=start_date)
+                .annotate(month=TruncMonth('date_joined'))
+                .values('month')
+                .annotate(count=Count('id'))
+                .order_by('month'))
+            
+            signups_over_time = []
+            for item in signups_qs:
+                if item['month']:
+                    signups_over_time.append({
+                        'day': item['month'].strftime('%Y-%m-%d'),
+                        'count': item['count']
+                    })
+        else:
+            days_map = {'7d': 7, '14d': 14, '30d': 30}
+            days = days_map.get(period, 7)
+            start_date = today_start - timedelta(days=days-1)
+            
+            signups_over_time = list(User.objects.filter(date_joined__gte=start_date)
+                .extra(select={'day': 'date(date_joined)'})
+                .values('day')
+                .annotate(count=Count('id'))
+                .order_by('day'))
 
         return Response({
             'total_students': total_users,
@@ -98,13 +146,13 @@ class RecentActivityView(views.APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        recent_orders = Payment.objects.filter(status='success').order_by('-created_at')[:10]
+        recent_orders = Payment.objects.filter(status='success').order_by('-created_at')[:50]
         data = []
         for order in recent_orders:
             data.append({
                 'id': order.id,
                 'student': order.user.email,
-                'course': order.course.title,
+                'course': order.course.title if order.course else 'Deleted Course',
                 'amount': order.amount,
                 'date': order.created_at
             })
