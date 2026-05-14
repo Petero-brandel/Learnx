@@ -15,7 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.views.static import serve
 from rest_framework_simplejwt.views import TokenRefreshView
 from accounts.views import CustomTokenObtainPairView
 
@@ -41,4 +43,10 @@ urlpatterns = [
     
     # Notifications App Endpoints
     path('api/notifications/', include('notifications.urls')),
+    
+    # Serve media files (new certificates will be in /media/)
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    
+    # Serve existing certificates that were generated before MEDIA_ROOT was configured
+    re_path(r'^certificates/(?P<path>.*)$', serve, {'document_root': settings.BASE_DIR / 'certificates'}),
 ]

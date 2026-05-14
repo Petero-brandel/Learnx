@@ -87,8 +87,8 @@ class ManualCertificateView(views.APIView):
         user_id = request.data.get('user_id')
         course_id = request.data.get('course_id')
         
-        # Force the certificate task to run immediately
-        async_task('certificates.tasks.generate_certificate_task', user_id, course_id)
+        # Force the certificate task to run immediately and overwrite any missing files
+        async_task('certificates.tasks.generate_certificate_task', user_id, course_id, force=True)
         
         return Response({'status': 'Certificate generation queued in the background.'}, status=status.HTTP_200_OK)
 
