@@ -27,8 +27,20 @@ def send_html_email(subject, template_name, context, recipient_list, attachment_
     
     # Attach PDF if provided
     if attachment_path:
-        with open(attachment_path, 'rb') as pdf_file:
-            email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
+        if attachment_path.startswith('http://') or attachment_path.startswith('https://'):
+            import requests
+            try:
+                response = requests.get(attachment_path)
+                response.raise_for_status()
+                email.attach('Certificate_of_Completion.pdf', response.content, 'application/pdf')
+            except Exception as e:
+                print(f"Failed to fetch attachment from URL: {e}")
+        else:
+            try:
+                with open(attachment_path, 'rb') as pdf_file:
+                    email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
+            except Exception as e:
+                print(f"Failed to read local attachment: {e}")
             
     email.send(fail_silently=True)
 

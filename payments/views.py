@@ -165,6 +165,13 @@ class MyEnrollmentsView(views.APIView):
         # Fetch active enrollments for the logged-in student
         enrollments = Enrollment.objects.filter(user=request.user, is_active=True).select_related('course')
         
+        from .models import LessonProgress
+        user_progress = LessonProgress.objects.filter(user=request.user, is_completed=True).values_list('lesson_id', 'lesson__module__course_id')
+        
+        progress_map = {}
+        for lesson_id, course_id in user_progress:
+            progress_map.setdefault(course_id, []).append(lesson_id)
+            
         data = []
         for e in enrollments:
             data.append({
@@ -174,7 +181,8 @@ class MyEnrollmentsView(views.APIView):
                 'course_slug': e.course.slug,
                 'course_thumbnail': e.course.thumbnail,
                 'progress_percentage': e.progress_percentage,
-                'enrolled_at': e.enrolled_at
+                'enrolled_at': e.enrolled_at,
+                'completed_lesson_ids': progress_map.get(e.course.id, [])
             })
             
         return Response(data, status=status.HTTP_200_OK)
