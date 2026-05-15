@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_q',
+    'storages',
     
     # Local apps
     'accounts',
@@ -172,6 +173,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Supabase S3 Storage Configuration
+if os.environ.get('SUPABASE_S3_ACCESS_KEY_ID'):
+    AWS_ACCESS_KEY_ID = os.environ.get('SUPABASE_S3_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('SUPABASE_S3_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('SUPABASE_S3_BUCKET_NAME', 'learnx-bucket')
+    AWS_S3_ENDPOINT_URL = os.environ.get('SUPABASE_S3_ENDPOINT_URL') # e.g. https://[project-ref].supabase.co/storage/v1/s3
+    AWS_S3_REGION_NAME = os.environ.get('SUPABASE_S3_REGION_NAME', 'eu-central-1') # Update based on your project
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_FILE_OVERWRITE = False
+    
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # Media URL prefix
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+else:
+    # Fallback to local storage if secrets are missing
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Email Configuration (Resend API)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
