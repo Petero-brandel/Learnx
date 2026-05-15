@@ -19,6 +19,10 @@ from datetime import timedelta
 # Load environment variables from .env file
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 
+# Construct DATABASE_URL from individual DB_* vars if present
+if 'DATABASE_URL' not in os.environ and 'DB_HOST' in os.environ:
+    os.environ['DATABASE_URL'] = f"postgres://{os.environ.get('DB_USER', '')}:{os.environ.get('DB_PASSWORD', '')}@{os.environ.get('DB_HOST', '')}:{os.environ.get('DB_PORT', '5432')}/{os.environ.get('DB_NAME', '')}"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
