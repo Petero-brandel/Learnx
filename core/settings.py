@@ -185,8 +185,8 @@ if os.environ.get('SUPABASE_S3_ACCESS_KEY_ID'):
     AWS_S3_FILE_OVERWRITE = False
     
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    # Media URL prefix
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 3600 # 1 hour
 else:
     # Fallback to local storage if secrets are missing
     MEDIA_URL = '/media/'
