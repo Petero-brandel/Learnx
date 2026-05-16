@@ -12,46 +12,47 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     buffer = BytesIO()
     
     # Create the PDF object, using the buffer as its "file."
-    # A4 landscape is exactly 841.89 x 595.27 points
     p = canvas.Canvas(buffer, pagesize=landscape(A4))
     width, height = landscape(A4)
     
-    # If you have a background image, you would draw it here:
-    # bg_path = os.path.join(settings.MEDIA_ROOT, 'certificate_bg.jpg')
-    # if os.path.exists(bg_path):
-    #     p.drawImage(bg_path, 0, 0, width=width, height=height)
-    
-    # -----------------------------------------------------
-    # TEMPORARY TEXT FALLBACK (until background is uploaded)
-    # -----------------------------------------------------
-    p.setFont("Helvetica-Bold", 36)
-    p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
-    
-    p.setFont("Helvetica", 18)
-    p.drawCentredString(width / 2.0, height - 200, "PROUDLY PRESENTED TO")
-    
-    p.setFont("Helvetica-Oblique", 48) # Cursive placeholder
-    p.drawCentredString(width / 2.0, height - 280, student_name)
-    
-    p.setFont("Helvetica", 14)
-    description = f"Congratulations on completing the {course_title} course!"
-    p.drawCentredString(width / 2.0, height - 350, description)
-    p.drawCentredString(width / 2.0, height - 370, "Your dedication and hard work have paid off.")
-    
-    # Signatures
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(150, height - 480, "Coach Izu")
-    p.setFont("Helvetica", 10)
-    p.drawString(150, height - 500, "Signature")
-    
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(width - 250, height - 480, date_str)
-    p.setFont("Helvetica", 10)
-    p.drawString(width - 250, height - 500, "Date")
+    from django.conf import settings
+    from reportlab.lib.colors import HexColor
 
-    # ID
+    # Draw the background image
+    bg_path = os.path.join(settings.BASE_DIR, 'static', 'certificate_bg.png')
+    if os.path.exists(bg_path):
+        p.drawImage(bg_path, 0, 0, width=width, height=height)
+    else:
+        # Fallback if image missing
+        p.setFont("Helvetica-Bold", 36)
+        p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
+    
+    # Student Name (above the center line)
+    p.setFont("Helvetica-Bold", 36)
+    p.setFillColor(HexColor("#0f172a")) # Dark slate
+    p.drawCentredString(width / 2.0, height / 2.0 + 10, student_name)
+    
+    # Course Title (below "has completed")
+    p.setFont("Helvetica-Bold", 28)
+    p.setFillColor(HexColor("#1e3a8a")) # Blue
+    p.drawCentredString(width / 2.0, height / 2.0 - 80, course_title)
+    
+    # Richer writeup below the course title
+    p.setFont("Helvetica", 14)
+    p.setFillColor(HexColor("#334155")) # Slate gray
+    p.drawCentredString(width / 2.0, height / 2.0 - 130, "having met all academic requirements and demonstrated")
+    p.drawCentredString(width / 2.0, height / 2.0 - 150, "outstanding proficiency in the subject matter.")
+    
+    # Date (above the left DATE line)
+    p.setFont("Helvetica-Bold", 14)
+    p.setFillColor(HexColor("#0f172a"))
+    # The line is around 1/4 of the page width, slightly offset
+    p.drawCentredString(width * 0.27, 105, date_str)
+    
+    # UUID (bottom right corner, very small)
     p.setFont("Helvetica", 8)
-    p.drawString(30, 30, f"Verify: learnxacademy.com/verify/{cert_id}")
+    p.setFillColor(HexColor("#64748b"))
+    p.drawRightString(width - 40, 20, f"ID: {cert_id}")
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
