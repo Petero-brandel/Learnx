@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.*
+db.sqlite3
+media/
+*.md
+.vscode
+.idea
+fly.toml
+Dockerfile
+.dockerignore

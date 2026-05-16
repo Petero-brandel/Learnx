@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 
 from .models import Payment, Enrollment
 from courses.models import Course
-from .paystack import initialize_transaction, verify_signature
+from .paystack import initialize_transaction, verify_signature, verify_transaction
 
 class CheckoutView(views.APIView):
     permission_classes = [IsAuthenticated]
@@ -81,6 +81,40 @@ class PaystackWebhookView(views.APIView):
             )
 
         return Response(status=status.HTTP_200_OK)
+
+class VerifyPaymentView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        reference = request.query_params.get('reference')
+        if not reference:
+            return Response({'error': 'Reference is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if payment already processed
+        try:
+            payment = Payment.objects.get(reference=reference)
+            if payment.status == 'success':
+                return Response({'status': 'success', 'message': 'Payment already verified'})
+        except Payment.DoesNotExist:
+            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verify with Paystack
+        tx_data = verify_transaction(reference)
+        if not tx_data:
+            return Response({'error': 'Payment verification failed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update payment
+        payment.status = 'success'
+        payment.paystack_id = str(tx_data.get('id', ''))
+        payment.save()
+
+        # Auto-enroll
+        Enrollment.objects.get_or_create(
+            user=payment.user,
+            course=payment.course
+        )
+
+        return Response({'status': 'success', 'message': 'Payment verified and enrolled'})
 
 class MarkLessonCompleteView(views.APIView):
     permission_classes = [IsAuthenticated]

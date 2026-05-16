@@ -35,3 +35,20 @@ def verify_signature(payload_body, signature_header):
     secret = PAYSTACK_SECRET_KEY.encode('utf-8')
     hash = hmac.new(secret, payload_body, hashlib.sha512).hexdigest()
     return hash == signature_header
+
+def verify_transaction(reference):
+    """
+    Verifies a transaction via Paystack's API.
+    Returns the transaction data if successful, None otherwise.
+    """
+    url = f"https://api.paystack.co/transaction/verify/{reference}"
+    headers = {
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('data', {}).get('status') == 'success':
+            return data['data']
+    return None
+
