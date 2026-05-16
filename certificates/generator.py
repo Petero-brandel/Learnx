@@ -30,29 +30,29 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     # Student Name (above the center line)
     p.setFont("Helvetica-Bold", 36)
     p.setFillColor(HexColor("#0f172a")) # Dark slate
-    p.drawCentredString(width / 2.0, height / 2.0 + 10, student_name)
+    p.drawCentredString(width / 2.0, height / 2.0 + 18, student_name)
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
     p.setFillColor(HexColor("#1e3a8a")) # Blue
-    p.drawCentredString(width / 2.0, height / 2.0 - 80, course_title)
+    p.drawCentredString(width / 2.0, height / 2.0 - 105, course_title)
     
     # Richer writeup below the course title
     p.setFont("Helvetica", 14)
     p.setFillColor(HexColor("#334155")) # Slate gray
-    p.drawCentredString(width / 2.0, height / 2.0 - 130, "having met all academic requirements and demonstrated")
-    p.drawCentredString(width / 2.0, height / 2.0 - 150, "outstanding proficiency in the subject matter.")
+    p.drawCentredString(width / 2.0, height / 2.0 - 140, "having met all academic requirements and demonstrated")
+    p.drawCentredString(width / 2.0, height / 2.0 - 160, "outstanding proficiency in the subject matter.")
     
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)
     p.setFillColor(HexColor("#0f172a"))
     # The line is around 1/4 of the page width, slightly offset
-    p.drawCentredString(width * 0.27, 105, date_str)
+    p.drawCentredString(width * 0.27, 72, date_str)
     
     # UUID (bottom right corner, very small)
     p.setFont("Helvetica", 8)
     p.setFillColor(HexColor("#64748b"))
-    p.drawRightString(width - 40, 20, f"ID: {cert_id}")
+    p.drawRightString(width - 45, 20, f"ID: {cert_id}")
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
