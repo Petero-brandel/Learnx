@@ -5,6 +5,7 @@ import requests
 from django.conf import settings
 
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', '')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 def initialize_transaction(email, amount_in_kobo, reference):
     """
@@ -19,7 +20,7 @@ def initialize_transaction(email, amount_in_kobo, reference):
         "email": email,
         "amount": amount_in_kobo,
         "reference": reference,
-        "callback_url": "https://learnxacademy.com/payment/verify" # Replace with actual frontend success URL
+        "callback_url": f"{FRONTEND_URL.rstrip('/')}/dashboard"
     }
 
     response = requests.post(url, json=payload, headers=headers)
