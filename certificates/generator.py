@@ -38,7 +38,7 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
         p.setFont("Helvetica-Bold", 36)
         
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    p.drawCentredString(width / 2.0, height / 2.0 + 28, student_name) # Positioned perfectly between the text and the line
+    p.drawCentredString(width / 2.0, height / 2.0 + 20, student_name) # Positioned perfectly between the text and the line
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
@@ -54,13 +54,14 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    # The line is around 1/4 of the page width, slightly offset
-    p.drawCentredString(width * 0.27, 72, date_str)
+    # Centered over the DATE line (approx 1/4 page width)
+    p.drawCentredString(width * 0.235, 72, date_str)
     
-    # UUID (bottom right corner, very small)
-    p.setFont("Helvetica", 8)
-    p.setFillColor(HexColor("#64748b"))
-    p.drawRightString(width - 45, 20, f"ID: {cert_id}")
+    # Certificate ID (Top right stamped style)
+    p.setFont("Courier-Bold", 12)
+    p.setFillColor(HexColor("#64748b")) # Slate gray
+    short_id = cert_id[:8].upper()
+    p.drawRightString(width - 40, height - 40, f"CERT NO: {short_id}")
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
