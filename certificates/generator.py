@@ -30,15 +30,15 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
         p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
     
     # Student Name (above the center line)
-    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'GreatVibes-Regular.ttf')
+    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'DancingScript-Bold.ttf')
     if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('GreatVibes', font_path))
-        p.setFont("GreatVibes", 56) # Slightly reduced so tall capitals don't overlap the text above
+        pdfmetrics.registerFont(TTFont('DancingScript', font_path))
+        p.setFont("DancingScript", 64) # Increased for legibility and presence
     else:
         p.setFont("Helvetica-Bold", 36)
         
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    p.drawCentredString(width / 2.0, height / 2.0 + 20, student_name) # Positioned perfectly between the text and the line
+    p.drawCentredString(width / 2.0, height / 2.0 + 18, student_name) # Nudged down slightly for the new font
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
