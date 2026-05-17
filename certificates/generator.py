@@ -2,6 +2,8 @@ import os
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import landscape, A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from django.core.files.base import ContentFile
 
 def create_certificate_pdf(student_name, course_title, date_str, cert_id):
@@ -28,20 +30,26 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
         p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
     
     # Student Name (above the center line)
-    p.setFont("Helvetica-Bold", 36)
+    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'GreatVibes-Regular.ttf')
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont('GreatVibes', font_path))
+        p.setFont("GreatVibes", 48)
+    else:
+        p.setFont("Helvetica-Bold", 36)
+        
     p.setFillColor(HexColor("#0f172a")) # Dark slate
-    p.drawCentredString(width / 2.0, height / 2.0 + 18, student_name)
+    p.drawCentredString(width / 2.0, height / 2.0 + 15, student_name)
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
     p.setFillColor(HexColor("#1e3a8a")) # Blue
-    p.drawCentredString(width / 2.0, height / 2.0 - 105, course_title)
+    p.drawCentredString(width / 2.0, height / 2.0 - 90, course_title)
     
     # Richer writeup below the course title
     p.setFont("Helvetica", 14)
     p.setFillColor(HexColor("#334155")) # Slate gray
-    p.drawCentredString(width / 2.0, height / 2.0 - 140, "having met all academic requirements and demonstrated")
-    p.drawCentredString(width / 2.0, height / 2.0 - 160, "outstanding proficiency in the subject matter.")
+    p.drawCentredString(width / 2.0, height / 2.0 - 130, "having met all academic requirements and demonstrated")
+    p.drawCentredString(width / 2.0, height / 2.0 - 150, "outstanding proficiency in the subject matter.")
     
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)

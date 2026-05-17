@@ -47,12 +47,13 @@ class RegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class MeView(APIView):
-    """Returns the currently authenticated user's profile."""
+class MeView(generics.RetrieveUpdateAPIView):
+    """Returns and updates the currently authenticated user's profile."""
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        return Response(UserSerializer(request.user).data)
+    def get_object(self):
+        return self.request.user
 
 
 class GoogleAuthView(APIView):
