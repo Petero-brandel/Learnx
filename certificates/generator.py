@@ -30,15 +30,21 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
         p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
     
     # Student Name (above the center line)
-    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'DancingScript-Bold.ttf')
+    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'AlexBrush-Regular.ttf')
+    font_loaded = False
     if os.path.exists(font_path):
-        pdfmetrics.registerFont(TTFont('DancingScript', font_path))
-        p.setFont("DancingScript", 64) # Increased for legibility and presence
-    else:
+        try:
+            pdfmetrics.registerFont(TTFont('AlexBrush', font_path))
+            p.setFont("AlexBrush", 64) # Increased for legibility and presence
+            font_loaded = True
+        except Exception as e:
+            print(f"Failed to load custom font: {e}")
+            
+    if not font_loaded:
         p.setFont("Helvetica-Bold", 36)
         
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    p.drawCentredString(width / 2.0, height / 2.0 + 18, student_name) # Nudged down slightly for the new font
+    p.drawCentredString(width / 2.0, height / 2.0 + 20, student_name)
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
