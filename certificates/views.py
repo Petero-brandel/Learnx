@@ -37,7 +37,7 @@ class CertificateDownloadView(views.APIView):
             return Response({'error': 'Certificate not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Generate PDF on the fly
-        student_name = cert.user.get_full_name() or cert.user.email
+        student_name = cert.user.full_name if cert.user.full_name else "Student"
         date_str = cert.issued_at.strftime("%B %d, %Y")
         pdf_content = create_certificate_pdf(student_name, cert.course.title, date_str, cert.certificate_id)
 

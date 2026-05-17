@@ -33,12 +33,12 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'GreatVibes-Regular.ttf')
     if os.path.exists(font_path):
         pdfmetrics.registerFont(TTFont('GreatVibes', font_path))
-        p.setFont("GreatVibes", 48)
+        p.setFont("GreatVibes", 64) # Increased font size for legibility
     else:
         p.setFont("Helvetica-Bold", 36)
         
-    p.setFillColor(HexColor("#0f172a")) # Dark slate
-    p.drawCentredString(width / 2.0, height / 2.0 + 15, student_name)
+    p.setFillColor(HexColor("#1e40af")) # Brand Blue
+    p.drawCentredString(width / 2.0, height / 2.0 + 38, student_name) # Lifted up significantly to clear the line
     
     # Course Title (below "has completed")
     p.setFont("Helvetica-Bold", 28)
@@ -47,13 +47,13 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     
     # Richer writeup below the course title
     p.setFont("Helvetica", 14)
-    p.setFillColor(HexColor("#334155")) # Slate gray
+    p.setFillColor(HexColor("#1e3a8a")) # Dark blue to match title
     p.drawCentredString(width / 2.0, height / 2.0 - 130, "having met all academic requirements and demonstrated")
     p.drawCentredString(width / 2.0, height / 2.0 - 150, "outstanding proficiency in the subject matter.")
     
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)
-    p.setFillColor(HexColor("#0f172a"))
+    p.setFillColor(HexColor("#1e40af")) # Brand Blue
     # The line is around 1/4 of the page width, slightly offset
     p.drawCentredString(width * 0.27, 72, date_str)
     
