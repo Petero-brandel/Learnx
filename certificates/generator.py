@@ -54,14 +54,14 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    # Centered over the DATE line (approx 1/4 page width)
-    p.drawCentredString(width * 0.235, 72, date_str)
+    # Centered over the DATE line
+    p.drawCentredString(width * 0.29, 72, date_str)
     
     # Certificate ID (Top right stamped style)
     p.setFont("Courier-Bold", 12)
     p.setFillColor(HexColor("#64748b")) # Slate gray
     short_id = str(cert_id)[:8].upper()
-    p.drawRightString(width - 40, height - 40, f"CERT NO: {short_id}")
+    p.drawRightString(width - 120, height - 40, f"CERT NO: {short_id}")
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
