@@ -54,8 +54,8 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     # Date (above the left DATE line)
     p.setFont("Helvetica-Bold", 14)
     p.setFillColor(HexColor("#1e40af")) # Brand Blue
-    # Centered over the DATE line
-    p.drawCentredString(width * 0.29, 72, date_str)
+    # Centered precisely over the DATE line
+    p.drawCentredString(width * 0.265, 72, date_str)
     
     # Certificate ID (Top right stamped style)
     p.setFont("Courier-Bold", 12)
