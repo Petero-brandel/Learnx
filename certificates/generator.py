@@ -60,7 +60,7 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
     # Certificate ID (Top right stamped style)
     p.setFont("Courier-Bold", 12)
     p.setFillColor(HexColor("#64748b")) # Slate gray
-    short_id = cert_id[:8].upper()
+    short_id = str(cert_id)[:8].upper()
     p.drawRightString(width - 40, height - 40, f"CERT NO: {short_id}")
 
     # Close the PDF object cleanly, and we're done.
