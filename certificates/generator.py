@@ -29,13 +29,13 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
         p.setFont("Helvetica-Bold", 36)
         p.drawCentredString(width / 2.0, height - 150, "CERTIFICATE OF ACHIEVEMENT")
     
-    # Student Name (above the center line) — bold hand-drawn uppercase style
-    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'PermanentMarker-Regular.ttf')
+    # Student Name (above the center line) — hand-drawn uppercase style, lighter weight
+    font_path = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'FrederickatheGreat-Regular.ttf')
     font_loaded = False
     if os.path.exists(font_path):
         try:
-            pdfmetrics.registerFont(TTFont('PermanentMarker', font_path))
-            p.setFont("PermanentMarker", 38)
+            pdfmetrics.registerFont(TTFont('FrederickaGreat', font_path))
+            p.setFont("FrederickaGreat", 40)
             font_loaded = True
         except Exception as e:
             print(f"Failed to load custom font: {e}")
