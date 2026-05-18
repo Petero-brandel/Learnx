@@ -22,9 +22,10 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Public users only see published courses. Admin sees all.
+        queryset = Course.objects.prefetch_related('modules__lessons')
         if self.request.user.is_staff:
-            return Course.objects.all()
-        return Course.objects.filter(is_published=True)
+            return queryset
+        return queryset.filter(is_published=True)
 
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all()
