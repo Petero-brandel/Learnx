@@ -3,9 +3,12 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.contrib.auth import get_user_model
+import os
 from courses.models import Course
 
 User = get_user_model()
+
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 
 def send_html_email(subject, template_name, context, recipient_list, attachment_path=None):
     """
@@ -24,15 +27,17 @@ def send_html_email(subject, template_name, context, recipient_list, attachment_
     
     # Attach PDF if provided
     if attachment_path:
-        with open(attachment_path, 'rb') as pdf_file:
-            email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
+        try:
+            with open(attachment_path, 'rb') as pdf_file:
+                email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
+        except FileNotFoundError:
+            print(f"Warning: Attachment not found at {attachment_path}")
             
-    email.send(fail_silently=False)
+    email.send(fail_silently=True)
 
 def send_welcome_email_task(user_id):
     user = User.objects.get(id=user_id)
-    # The frontend URL for login. In production, this would be an env var.
-    login_url = "https://learnxacademy.com/login" 
+    login_url = f"{FRONTEND_URL}/login"
     
     send_html_email(
         subject="Welcome to LearnX! 🎉",
@@ -44,7 +49,7 @@ def send_welcome_email_task(user_id):
 def send_purchase_email_task(user_id, course_id):
     user = User.objects.get(id=user_id)
     course = Course.objects.get(id=course_id)
-    course_url = f"https://learnxacademy.com/courses/{course.slug}"
+    course_url = f"{FRONTEND_URL}/courses/{course.slug}"
     
     send_html_email(
         subject="Course Unlocked! 🚀",
@@ -67,8 +72,7 @@ def send_certificate_email_task(user_id, course_id, pdf_path):
 
 def send_verification_email_task(user_id):
     user = User.objects.get(id=user_id)
-    # The frontend URL for email verification
-    verify_url = f"http://localhost:3000/verify-email?token={user.verification_token}" 
+    verify_url = f"{FRONTEND_URL}/verify-email?token={user.verification_token}"
     
     send_html_email(
         subject="Verify your LearnX account email",
@@ -79,8 +83,7 @@ def send_verification_email_task(user_id):
 
 def send_password_reset_email_task(user_id, uidb64, token):
     user = User.objects.get(id=user_id)
-    # The frontend URL for password reset
-    reset_url = f"http://localhost:3000/reset-password?uid={uidb64}&token={token}"
+    reset_url = f"{FRONTEND_URL}/reset-password?uid={uidb64}&token={token}"
     
     send_html_email(
         subject="Reset your LearnX password",

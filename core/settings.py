@@ -134,7 +134,8 @@ Q_CLUSTER = {
     'queue_limit': 500,
     'cpu_affinity': 1,
     'label': 'Django Q',
-    'orm': 'default'  # Use database as broker
+    'orm': 'default',  # Use database as broker
+    'max_attempts': 3,
 }
 
 
@@ -199,4 +200,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'resend'
 EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'LearnX Academy <onboarding@resend.dev>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'LearnX Academy <support@bluedemy.org>')
