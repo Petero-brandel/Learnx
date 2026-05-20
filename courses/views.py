@@ -64,12 +64,24 @@ class LessonViewSet(viewsets.ModelViewSet):
         guid = create_video_object(f"Lesson {lesson.id} - {lesson.title}")
         
         if guid:
+            import time, hashlib
             # Save the GUID to the lesson so we know which video it belongs to
             lesson.video_id = guid
             lesson.save()
+            
+            library_id = os.environ.get('BUNNY_LIBRARY_ID')
+            api_key = os.environ.get('BUNNY_API_KEY')
+            expiration_time = int(time.time()) + 3600
+            
+            # Generate SHA256 signature for Bunny Stream TUS upload
+            data_to_hash = f"{library_id}{api_key}{expiration_time}{guid}"
+            signature = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
+            
             return Response({
                 'video_id': guid,
-                'library_id': os.environ.get('BUNNY_LIBRARY_ID')
+                'library_id': library_id,
+                'authorization_signature': signature,
+                'authorization_expire': expiration_time
             })
         
         return Response({'error': 'Failed to communicate with Bunny Stream.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
