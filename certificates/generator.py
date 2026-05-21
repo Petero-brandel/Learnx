@@ -4,6 +4,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import logging
+
+logger = logging.getLogger(__name__)
 from django.core.files.base import ContentFile
 
 
@@ -38,7 +41,7 @@ def create_certificate_pdf(student_name, course_title, date_str, cert_id):
             p.setFont("PermanentMarker", 30)
             font_loaded = True
         except Exception as e:
-            print(f"Failed to load custom font: {e}")
+            logger.exception("Failed to load custom font at %s: %s", font_path, str(e))
             
     if not font_loaded:
         p.setFont("Helvetica-Bold", 36)

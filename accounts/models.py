@@ -48,6 +48,9 @@ class CustomUser(AbstractUser):
 # Trigger notifications on new user registration
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import logging
+
+logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=CustomUser)
 def create_welcome_notification(sender, instance, created, **kwargs):
@@ -61,8 +64,9 @@ def create_welcome_notification(sender, instance, created, **kwargs):
             notification_type='system'
         )
         
-        # Dispatch HTML Email
+        # Dispatch HTML Email (queued)
         from django_q.tasks import async_task
+        logger.info("Queueing welcome email for user_id=%s", instance.id)
         async_task('emails.tasks.send_welcome_email_task', instance.id)
         
         # 2. Notify the Admin (Coach Izu)

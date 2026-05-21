@@ -1,15 +1,40 @@
-.git
-.gitignore
-__pycache__
+# .dockerignore - Optimized for faster deploys
+
+# Python
+__pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+venv/
+ENV/
+env/
+
+# Django
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+migrations/__pycache__/
+
+# Development
+.git/
+.gitignore
 .env
 .env.*
-db.sqlite3
-media/
+.vscode/
+.idea/
 *.md
-.vscode
-.idea
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Fly / Docker
 fly.toml
 Dockerfile
 .dockerignore
+
+# Misc
+.DS_Store
+Thumbs.db

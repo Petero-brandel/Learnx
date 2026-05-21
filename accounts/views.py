@@ -12,6 +12,9 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user_model
 from emails.tasks import send_verification_email_task
 from .serializers import RegisterSerializer, UserSerializer, GoogleAuthSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -38,7 +41,7 @@ class RegisterView(generics.CreateAPIView):
             send_verification_email_task(user.id)
         except Exception as e:
             # Log the error in production, but continue the flow
-            print(f"Failed to send verification email: {str(e)}")
+            logger.exception("Failed to send verification email for user_id=%s: %s", user.id, str(e))
 
         # Return a success message instead of JWT tokens.
         # User must verify email before logging in.
@@ -121,7 +124,7 @@ class GoogleAuthView(APIView):
                 from emails.tasks import send_welcome_email_task
                 send_welcome_email_task(user.id)
             except Exception as e:
-                print(f"Failed to send welcome email (Google Auth): {str(e)}")
+                logger.exception("Failed to send welcome email (Google Auth) for user_id=%s: %s", user.id, str(e))
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
@@ -154,7 +157,7 @@ class VerifyEmailView(APIView):
                 from emails.tasks import send_welcome_email_task
                 send_welcome_email_task(user.id)
             except Exception as e:
-                print(f"Failed to send welcome email (Verify): {str(e)}")
+                logger.exception("Failed to send welcome email (Verify) for user_id=%s: %s", user.id, str(e))
                 
             return Response({'message': 'Email verified successfully. You can now log in.'})
         except User.DoesNotExist:
@@ -191,7 +194,7 @@ class PasswordResetRequestView(APIView):
             try:
                 send_password_reset_email_task(user.id, uidb64, token)
             except Exception as e:
-                print(f"Failed to send password reset email: {str(e)}")
+                logger.exception("Failed to send password reset email for user_id=%s: %s", user.id, str(e))
                 
         except User.DoesNotExist:
             # Silently ignore to prevent email enumeration

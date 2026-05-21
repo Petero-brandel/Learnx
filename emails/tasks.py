@@ -1,12 +1,15 @@
+import logging
+import os
+
+from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.conf import settings
-from django.contrib.auth import get_user_model
-import os
 from courses.models import Course
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
 
@@ -14,6 +17,8 @@ def send_html_email(subject, template_name, context, recipient_list, attachment_
     """
     Utility function to send a multi-alternative email (HTML + Plain text fallback)
     """
+    logger.info("Sending email subject=%s recipients=%s template=%s", subject, recipient_list, template_name)
+
     html_content = render_to_string(f'emails/{template_name}', context)
     text_content = strip_tags(html_content)
     
@@ -31,16 +36,22 @@ def send_html_email(subject, template_name, context, recipient_list, attachment_
             with open(attachment_path, 'rb') as pdf_file:
                 email.attach('Certificate_of_Completion.pdf', pdf_file.read(), 'application/pdf')
         except FileNotFoundError:
-            print(f"Warning: Attachment not found at {attachment_path}")
-            
-    email.send(fail_silently=True)
+            logger.warning("Attachment not found at %s for subject=%s recipients=%s", attachment_path, subject, recipient_list)
+
+    try:
+        sent_count = email.send(fail_silently=False)
+        logger.info("Email sent subject=%s recipients=%s sent_count=%s backend=%s", subject, recipient_list, sent_count, settings.EMAIL_BACKEND)
+        return sent_count
+    except Exception:
+        logger.exception("Email send failed subject=%s recipients=%s backend=%s", subject, recipient_list, settings.EMAIL_BACKEND)
+        raise
 
 def send_welcome_email_task(user_id):
     user = User.objects.get(id=user_id)
     login_url = f"{FRONTEND_URL}/login"
     
     send_html_email(
-        subject="Welcome to LearnX! 🎉",
+        subject="Welcome to LearnX!",
         template_name="welcome.html",
         context={'user': user, 'login_url': login_url},
         recipient_list=[user.email]
@@ -52,7 +63,7 @@ def send_purchase_email_task(user_id, course_id):
     course_url = f"{FRONTEND_URL}/courses/{course.slug}"
     
     send_html_email(
-        subject="Course Unlocked! 🚀",
+        subject="Course Unlocked!",
         template_name="purchase.html",
         context={'user': user, 'course': course, 'course_url': course_url},
         recipient_list=[user.email]
@@ -63,7 +74,7 @@ def send_certificate_email_task(user_id, course_id, pdf_path):
     course = Course.objects.get(id=course_id)
     
     send_html_email(
-        subject="Certificate Ready! 🏆",
+        subject="Certificate Ready!",
         template_name="certificate.html",
         context={'user': user, 'course': course},
         recipient_list=[user.email],

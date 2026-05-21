@@ -1,11 +1,13 @@
 import os
 import django
+import logging
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 def create_users():
@@ -15,9 +17,9 @@ def create_users():
             password='adminpassword123',
             full_name='Admin User'
         )
-        print("Superuser admin@learnx.com created.")
+        logger.info("Superuser admin@learnx.com created.")
     else:
-        print("Superuser already exists.")
+        logger.info("Superuser already exists.")
 
     if not User.objects.filter(email='student@learnx.com').exists():
         User.objects.create_user(
@@ -25,9 +27,9 @@ def create_users():
             password='studentpassword123',
             full_name='Student User'
         )
-        print("User student@learnx.com created.")
+        logger.info("User student@learnx.com created.")
     else:
-        print("User already exists.")
+        logger.info("User already exists.")
 
 if __name__ == '__main__':
     create_users()

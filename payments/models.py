@@ -48,6 +48,9 @@ class LessonProgress(models.Model):
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import logging
+
+logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Enrollment)
 def create_enrollment_notification(sender, instance, created, **kwargs):
@@ -64,8 +67,9 @@ def create_enrollment_notification(sender, instance, created, **kwargs):
             notification_type='enrollment'
         )
         
-        # Dispatch HTML Email
+        # Dispatch HTML Email (queued)
         from django_q.tasks import async_task
+        logger.info("Queueing purchase email for user_id=%s course_id=%s", instance.user.id, instance.course.id)
         async_task('emails.tasks.send_purchase_email_task', instance.user.id, instance.course.id)
         
         # 2. Notify admin

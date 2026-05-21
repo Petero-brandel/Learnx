@@ -3,6 +3,9 @@ from courses.models import Course
 from .models import Certificate
 from .generator import create_certificate_pdf
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -28,6 +31,7 @@ def generate_certificate_task(user_id, course_id):
         
         # Dispatch HTML Email with attachment
         from django_q.tasks import async_task
+        logger.info("Generated certificate %s for user_id=%s course_id=%s; queueing email", cert.certificate_id, user.id, course.id)
         async_task('emails.tasks.send_certificate_email_task', user.id, course.id, cert.pdf_file.path)
         
         from notifications.models import Notification

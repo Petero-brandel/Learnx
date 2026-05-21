@@ -1,16 +1,40 @@
+```django
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2 style="color: #1e293b; margin-top: 0;">Certificate Ready! 🏆</h2>
-    <p>Hi {{ user.first_name|default:user.email }},</p>
-    <p>Congratulations! We have verified that you successfully completed 100% of <strong>{{ course.title }}</strong>.</p>
-    <p>Your hard work and dedication have paid off. Attached to this email is your official, high-resolution certificate of completion.</p>
-    
-    <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 25px 0; color: #92400e;">
-        <strong>Pro Tip:</strong> You can upload this certificate directly to the "Licenses & certifications" section of your LinkedIn profile!
-    </div>
-    
-    <p>We are incredibly proud of your achievement.</p>
-    
-    <p style="margin-top: 30px;">Best Regards,<br>Coach Izu</p>
+
+<h2 style="margin-top: 0; margin-bottom: 18px; font-size: 28px; line-height: 1.3; color: #111827; font-weight: 700;">
+    Your certificate is ready.
+</h2>
+
+<p>
+    Hi {{ user.first_name|default:user.email }},
+</p>
+
+<p>
+    Congratulations on completing <strong>{{ course.title }}</strong>.
+</p>
+
+<p>
+    You've successfully finished the course requirements, and your certificate of completion is attached to this email.
+</p>
+
+<div style="margin: 32px 0; padding: 18px 20px; background-color: #eff6ff; border: 1px solid #dbeafe; border-radius: 10px; color: #1e3a8a;">
+    This certificate can be added directly to your LinkedIn profile under
+    <strong>Licenses & Certifications</strong>.
+</div>
+
+<p>
+    Most people start courses. Very few actually finish them.
+</p>
+
+<p>
+    Good work putting in the time.
+</p>
+
+<p style="margin-top: 32px;">
+    - Coach Izu
+</p>
+
 {% endblock %}
+```

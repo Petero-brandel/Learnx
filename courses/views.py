@@ -18,7 +18,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly] # Admin handles create/update, public can read
     lookup_field = 'slug'
 
-    def get_serializer_class(self):
+    def get_serializer_class(self): 
         if self.action == 'list':
             return CourseListSerializer
         return CourseDetailSerializer
@@ -137,28 +137,68 @@ class QuizViewSet(viewsets.ModelViewSet):
 
         return Response(QuizSerializer(quiz).data)
 
+    # @action(detail=True, methods=['get'])
+    # def student_view(self, request, pk=None):
+    #     quiz = self.get_object()
+    #     data = QuizSerializer(quiz).data
+
+    #     # Hide correct answers from students
+    #     for q in data.get('questions', []):
+    #         for a in q.get('answers', []):
+    #             a.pop('is_correct', None)
+                
+    #     user = request.user
+    #     attempts_used = 0
+    #     already_passed = False
+        
+    #     if user.is_authenticated:
+    #         attempts = QuizAttempt.objects.filter(quiz=quiz, user=user)
+    #         attempts_used = attempts.count()
+    #         already_passed = attempts.filter(passed=True).exists()
+
+    #     data['attempts_used'] = attempts_used
+    #     data['already_passed'] = already_passed
+    #     return Response(data)
+
+
     @action(detail=True, methods=['get'])
     def student_view(self, request, pk=None):
-        quiz = self.get_object()
-        data = QuizSerializer(quiz).data
+        try:
+            quiz = self.get_object()
+            
+            serializer = QuizSerializer(quiz)
+            data = serializer.data
 
-        # Hide correct answers from students
-        for q in data.get('questions', []):
-            for a in q.get('answers', []):
-                a.pop('is_correct', None)
-                
-        user = request.user
-        attempts_used = 0
-        already_passed = False
-        
-        if user.is_authenticated:
-            attempts = QuizAttempt.objects.filter(quiz=quiz, user=user)
-            attempts_used = attempts.count()
-            already_passed = attempts.filter(passed=True).exists()
+            # Hide correct answers from students
+            for question in data.get('questions', []):
+                for answer in question.get('answers', []):
+                    answer.pop('is_correct', None)
 
-        data['attempts_used'] = attempts_used
-        data['already_passed'] = already_passed
-        return Response(data)
+            # Add student progress
+            attempts_used = 0
+            already_passed = False
+
+            if request.user.is_authenticated:
+                attempts = QuizAttempt.objects.filter(quiz=quiz, user=request.user)
+                attempts_used = attempts.count()
+                already_passed = attempts.filter(passed=True).exists()
+
+            data['attempts_used'] = attempts_used
+            data['already_passed'] = already_passed
+
+            return Response(data)
+
+        except Exception as e:
+            import traceback
+            error_msg = traceback.format_exc()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception("student_view failed for quiz_id=%s: %s", pk, error_msg)
+
+            return Response({
+                "error": "Failed to load quiz",
+                "detail": str(e)
+            }, status=500)
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
