@@ -19,9 +19,17 @@ from datetime import timedelta
 # Load environment variables from .env file
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 
+import urllib.parse
+
 # Construct DATABASE_URL from individual DB_* vars if present
 if 'DATABASE_URL' not in os.environ and 'DB_HOST' in os.environ:
-    os.environ['DATABASE_URL'] = f"postgres://{os.environ.get('DB_USER', '')}:{os.environ.get('DB_PASSWORD', '')}@{os.environ.get('DB_HOST', '')}:{os.environ.get('DB_PORT', '5432')}/{os.environ.get('DB_NAME', '')}"
+    db_user = urllib.parse.quote_plus(os.environ.get('DB_USER', ''))
+    db_password = urllib.parse.quote_plus(os.environ.get('DB_PASSWORD', ''))
+    os.environ['DATABASE_URL'] = f"postgres://{db_user}:{db_password}@{os.environ.get('DB_HOST', '')}:{os.environ.get('DB_PORT', '5432')}/{os.environ.get('DB_NAME', '')}"
+    if 'DB_SSLMODE' in os.environ:
+        os.environ['DATABASE_URL'] += f"?sslmode={os.environ.get('DB_SSLMODE')}"
+
+print("DEBUG: DATABASE_URL is", os.environ.get('DATABASE_URL'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +45,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-e7*8#g9(ng-scj14kz$yq
 DEBUG = os.environ.get('DEBUG', 'False') == '1'
 
 ALLOWED_HOSTS = ['*'] # Restrict in production
+
+if os.environ.get('FLY_APP_NAME'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 # Application definition
@@ -69,6 +86,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -173,7 +191,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # Supabase S3 Storage Configuration
 if os.environ.get('SUPABASE_S3_ACCESS_KEY_ID'):

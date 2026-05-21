@@ -3,11 +3,14 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
-from .models import Course, Module, Lesson
+from .models import Course, Module, Lesson, Quiz, Question, Answer, QuizAttempt
 from .serializers import (
     CourseListSerializer, CourseDetailSerializer, 
-    ModuleSerializer, LessonSerializer, LessonReorderSerializer
+    ModuleSerializer, LessonSerializer, LessonReorderSerializer,
+    QuizSerializer, QuestionSerializer, AnswerSerializer, QuizAttemptSerializer
 )
+from django.utils import timezone
+import json
 from .bunny import create_video_object
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -85,3 +88,137 @@ class LessonViewSet(viewsets.ModelViewSet):
             })
         
         return Response({'error': 'Failed to communicate with Bunny Stream.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class QuizViewSet(viewsets.ModelViewSet):
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
+    
+    # We will use simple permissions: admin can manage, students can read/submit.
+    def get_permissions(self):
+        if self.action in ['save_all', 'create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return [IsAuthenticatedOrReadOnly()]
+
+    @action(detail=True, methods=['post'])
+    def save_all(self, request, pk=None):
+        quiz = self.get_object()
+        data = request.data
+
+        # Update quiz settings
+        quiz.passing_score = data.get('passing_score', quiz.passing_score)
+        quiz.max_attempts = data.get('max_attempts', quiz.max_attempts)
+        quiz.time_limit_minutes = data.get('time_limit_minutes', quiz.time_limit_minutes)
+        quiz.is_required = data.get('is_required', quiz.is_required)
+        quiz.show_correct_answers = data.get('show_correct_answers', quiz.show_correct_answers)
+        quiz.shuffle_questions = data.get('shuffle_questions', quiz.shuffle_questions)
+        quiz.shuffle_answers = data.get('shuffle_answers', quiz.shuffle_answers)
+        quiz.save()
+
+        # Update questions & answers
+        questions_data = data.get('questions', [])
+        
+        # We will delete all old questions and recreate them to ensure a clean state (simple approach)
+        quiz.questions.all().delete()
+        
+        for q_data in questions_data:
+            q = Question.objects.create(
+                quiz=quiz,
+                text=q_data.get('text', ''),
+                question_type=q_data.get('question_type', 'multiple_choice'),
+                order=q_data.get('order', 0)
+            )
+            answers_data = q_data.get('answers', [])
+            for a_data in answers_data:
+                Answer.objects.create(
+                    question=q,
+                    text=a_data.get('text', ''),
+                    is_correct=a_data.get('is_correct', False)
+                )
+
+        return Response(QuizSerializer(quiz).data)
+
+    @action(detail=True, methods=['get'])
+    def student_view(self, request, pk=None):
+        quiz = self.get_object()
+        data = QuizSerializer(quiz).data
+
+        # Hide correct answers from students
+        for q in data.get('questions', []):
+            for a in q.get('answers', []):
+                a.pop('is_correct', None)
+                
+        user = request.user
+        attempts_used = 0
+        already_passed = False
+        
+        if user.is_authenticated:
+            attempts = QuizAttempt.objects.filter(quiz=quiz, user=user)
+            attempts_used = attempts.count()
+            already_passed = attempts.filter(passed=True).exists()
+
+        data['attempts_used'] = attempts_used
+        data['already_passed'] = already_passed
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        quiz = self.get_object()
+        user = request.user
+        if not user.is_authenticated:
+            return Response({'error': 'Must be logged in to submit a quiz.'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        submitted_answers = request.data.get('answers', {})
+        time_taken = request.data.get('time_taken_seconds', 0)
+        
+        total_questions = quiz.questions.count()
+        correct_count = 0
+        correct_answers_dict = {}
+
+        for q in quiz.questions.all():
+            correct_ans = q.answers.filter(is_correct=True).first()
+            if correct_ans:
+                correct_answers_dict[str(q.id)] = correct_ans.id
+                
+            submitted_ans_id = submitted_answers.get(str(q.id))
+            if correct_ans and submitted_ans_id is not None and int(submitted_ans_id) == correct_ans.id:
+                correct_count += 1
+                
+        score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
+        passed = score >= quiz.passing_score
+        
+        attempt = QuizAttempt.objects.create(
+            user=user,
+            quiz=quiz,
+            score=score,
+            passed=passed,
+            time_taken_seconds=time_taken,
+            selected_answers=submitted_answers
+        )
+        
+        attempts_used = QuizAttempt.objects.filter(quiz=quiz, user=user).count()
+        attempts_remaining = max(0, quiz.max_attempts - attempts_used) if quiz.max_attempts > 0 else None
+        
+        result = {
+            'score': float(score),
+            'passed': passed,
+            'total_questions': total_questions,
+            'correct_count': correct_count,
+            'attempts_used': attempts_used,
+            'attempts_remaining': attempts_remaining,
+        }
+        
+        if quiz.show_correct_answers:
+            result['correct_answers'] = correct_answers_dict
+            
+        return Response(result)
+
+    @action(detail=True, methods=['get'])
+    def attempts(self, request, pk=None):
+        quiz = self.get_object()
+        user = request.user
+        if not user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        attempts = QuizAttempt.objects.filter(quiz=quiz, user=user).order_by('-attempted_at')
+        serializer = QuizAttemptSerializer(attempts, many=True)
+        return Response(serializer.data)

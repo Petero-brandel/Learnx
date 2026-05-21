@@ -11,6 +11,9 @@ def create_video_object(title):
     Creates a video object in Bunny Stream and returns the GUID.
     The frontend will use this GUID to directly upload the video file via TUS.
     """
+    if not BUNNY_API_KEY or not LIBRARY_ID:
+        return None
+
     url = f"https://video.bunnycdn.com/library/{LIBRARY_ID}/videos"
     
     headers = {
@@ -21,7 +24,10 @@ def create_video_object(title):
     
     payload = {"title": title}
     
-    response = requests.post(url, json=payload, headers=headers)
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+    except requests.RequestException:
+        return None
     
     if response.status_code == 200:
         return response.json().get('guid')

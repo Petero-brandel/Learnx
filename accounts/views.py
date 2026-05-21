@@ -2,6 +2,7 @@ import os
 import requests
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from google.auth.exceptions import GoogleAuthError
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -72,7 +73,7 @@ class GoogleAuthView(APIView):
         try:
             if access_token:
                 # Verify access_token using Google UserInfo endpoint
-                response = requests.get(f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}")
+                response = requests.get(f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}", timeout=10)
                 if not response.ok:
                     return Response({'error': 'Invalid Google access token'}, status=status.HTTP_400_BAD_REQUEST)
                 idinfo = response.json()
@@ -83,49 +84,54 @@ class GoogleAuthView(APIView):
                     google_requests.Request(),
                     GOOGLE_CLIENT_ID,
                 )
+        except requests.RequestException:
+            return Response({'error': 'Failed to reach Google authentication services.'}, status=status.HTTP_502_BAD_GATEWAY)
+        except GoogleAuthError:
+            return Response({'error': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({'error': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'error': 'Google authentication failed.'}, status=status.HTTP_502_BAD_GATEWAY)
 
-            email = idinfo.get('email')
-            if not email:
-                return Response({'error': 'Google token missing email.'}, status=status.HTTP_400_BAD_REQUEST)
+        email = idinfo.get('email')
+        if not email:
+            return Response({'error': 'Google token missing email.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            full_name = idinfo.get('name', '')
-            profile_photo = idinfo.get('picture', '')
+        full_name = idinfo.get('name', '')
+        profile_photo = idinfo.get('picture', '')
 
-            # Get or create the user
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'full_name': full_name,
-                    'profile_photo': profile_photo,
-                    'is_email_verified': True, # Google accounts are already verified
-                }
-            )
+        # Get or create the user
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'full_name': full_name,
+                'profile_photo': profile_photo,
+                'is_email_verified': True, # Google accounts are already verified
+            }
+        )
 
-            # If user already exists, update their profile photo from Google
-            if not created and profile_photo:
-                user.profile_photo = profile_photo
-                user.save(update_fields=['profile_photo'])
+        # If user already exists, update their profile photo from Google
+        if not created and profile_photo:
+            user.profile_photo = profile_photo
+            user.save(update_fields=['profile_photo'])
 
-            # Send welcome email for brand new Google signups
-            if created:
-                try:
-                    from emails.tasks import send_welcome_email_task
-                    send_welcome_email_task(user.id)
-                except Exception as e:
-                    print(f"Failed to send welcome email (Google Auth): {str(e)}")
+        # Send welcome email for brand new Google signups
+        if created:
+            try:
+                from emails.tasks import send_welcome_email_task
+                send_welcome_email_task(user.id)
+            except Exception as e:
+                print(f"Failed to send welcome email (Google Auth): {str(e)}")
 
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
 
-            return Response({
-                'user': UserSerializer(user).data,
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-                'created': created,
-            })
-
-        except ValueError as e:
-            return Response({'error': f'Invalid Google token: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'user': UserSerializer(user).data,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'created': created,
+        })
 
 
 class VerifyEmailView(APIView):

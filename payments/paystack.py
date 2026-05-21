@@ -11,6 +11,9 @@ def initialize_transaction(email, amount_in_kobo, reference):
     """
     Initializes a Paystack transaction and returns the authorization URL.
     """
+    if not PAYSTACK_SECRET_KEY:
+        return None
+
     url = "https://api.paystack.co/transaction/initialize"
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
@@ -23,9 +26,12 @@ def initialize_transaction(email, amount_in_kobo, reference):
         "callback_url": f"{FRONTEND_URL.rstrip('/')}/dashboard"
     }
 
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        return response.json()['data']['authorization_url']
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code == 200:
+            return response.json()['data']['authorization_url']
+    except requests.RequestException:
+        return None
     return None
 
 def verify_signature(payload_body, signature_header):
@@ -45,10 +51,13 @@ def verify_transaction(reference):
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
     }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get('data', {}).get('status') == 'success':
-            return data['data']
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('data', {}).get('status') == 'success':
+                return data['data']
+    except requests.RequestException:
+        return None
     return None
 
