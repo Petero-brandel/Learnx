@@ -51,7 +51,6 @@ SECRET_KEY = os.environ.get(
     "django-insecure-change-this-in-production"
 )
 
-# DEBUG HANDLING
 DEBUG = os.environ.get("DEBUG", "False").lower() in [
     "true",
     "1",
@@ -80,8 +79,6 @@ if os.environ.get("FLY_APP_NAME"):
         "https",
     )
 
-    # IMPORTANT:
-    # Keep FALSE for Fly.io unless you confirm redirects work properly
     SECURE_SSL_REDIRECT = False
 
     SESSION_COOKIE_SECURE = True
@@ -151,10 +148,6 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-# OPTIONAL:
-# If you want temporary unrestricted testing:
-# CORS_ALLOW_ALL_ORIGINS = True
 
 # ---------------------------------------------------
 # CSRF TRUSTED ORIGINS
@@ -299,19 +292,11 @@ USE_TZ = True
 # ---------------------------------------------------
 
 STATIC_URL = "/static/"
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": (
-            "whitenoise.storage."
-            "CompressedManifestStaticFilesStorage"
-        ),
-    },
-}
-
 # ---------------------------------------------------
-# MEDIA / SUPABASE STORAGE
+# STORAGE / MEDIA
 # ---------------------------------------------------
 
 if os.environ.get("SUPABASE_S3_ACCESS_KEY_ID"):
@@ -342,19 +327,44 @@ if os.environ.get("SUPABASE_S3_ACCESS_KEY_ID"):
 
     AWS_S3_FILE_OVERWRITE = False
 
-    DEFAULT_FILE_STORAGE = (
-        "storages.backends.s3boto3.S3Boto3Storage"
-    )
-
     AWS_QUERYSTRING_AUTH = True
 
     AWS_QUERYSTRING_EXPIRE = 3600
+
+    STORAGES = {
+        "default": {
+            "BACKEND": (
+                "storages.backends.s3boto3.S3Boto3Storage"
+            ),
+        },
+        "staticfiles": {
+            "BACKEND": (
+                "whitenoise.storage."
+                "CompressedManifestStaticFilesStorage"
+            ),
+        },
+    }
 
 else:
 
     MEDIA_URL = "/media/"
 
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    MEDIA_ROOT = BASE_DIR / "media"
+
+    STORAGES = {
+        "default": {
+            "BACKEND": (
+                "django.core.files.storage."
+                "FileSystemStorage"
+            ),
+        },
+        "staticfiles": {
+            "BACKEND": (
+                "whitenoise.storage."
+                "CompressedManifestStaticFilesStorage"
+            ),
+        },
+    }
 
 # ---------------------------------------------------
 # EMAIL

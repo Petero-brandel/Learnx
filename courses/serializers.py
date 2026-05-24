@@ -194,6 +194,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'thumbnail',
+            'preview_video_id',
             'is_published',
             'created_at',
             'updated_at',
@@ -213,6 +214,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'thumbnail',
+            'preview_video_id',
             'is_published',
             'created_at',
             'modules'

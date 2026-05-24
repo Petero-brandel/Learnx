@@ -30,6 +30,65 @@ class CourseViewSet(viewsets.ModelViewSet):
             return queryset
         return queryset.filter(is_published=True)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def request_course_upload_url(self, request, slug=None):
+        """
+        Requests a TUS direct-upload GUID from Bunny Stream for a course preview.
+        """
+        course = self.get_object()
+
+        # Call Bunny API
+        guid = create_video_object(f"Course Preview - {course.title}")
+        
+        if guid:
+            import time, hashlib
+            # Save the GUID to the course so we know which video it belongs to
+            course.preview_video_id = guid
+            course.save()
+            
+            library_id = os.environ.get('BUNNY_LIBRARY_ID')
+            api_key = os.environ.get('BUNNY_API_KEY')
+            expiration_time = int(time.time()) + 3600
+            
+            # Generate SHA256 signature for Bunny Stream TUS upload
+            data_to_hash = f"{library_id}{api_key}{expiration_time}{guid}"
+            signature = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
+            
+            return Response({
+                'video_id': guid,
+                'library_id': library_id,
+                'authorization_signature': signature,
+                'authorization_expire': expiration_time
+            })
+        
+        return Response({'error': 'Failed to communicate with Bunny Stream.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def request_new_course_upload_url(self, request):
+        """
+        Requests a TUS direct-upload GUID from Bunny Stream for a new course preview.
+        """
+        title = request.data.get('title', 'New Course Preview')
+        guid = create_video_object(f"Course Preview - {title}")
+        
+        if guid:
+            import time, hashlib
+            library_id = os.environ.get('BUNNY_LIBRARY_ID')
+            api_key = os.environ.get('BUNNY_API_KEY')
+            expiration_time = int(time.time()) + 3600
+            
+            data_to_hash = f"{library_id}{api_key}{expiration_time}{guid}"
+            signature = hashlib.sha256(data_to_hash.encode('utf-8')).hexdigest()
+            
+            return Response({
+                'video_id': guid,
+                'library_id': library_id,
+                'authorization_signature': signature,
+                'authorization_expire': expiration_time
+            })
+        
+        return Response({'error': 'Failed to communicate with Bunny Stream.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
