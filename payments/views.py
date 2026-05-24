@@ -20,9 +20,17 @@ class CheckoutView(views.APIView):
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        if not course.is_published:
+            return Response({'error': 'This course is not available for enrollment yet.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Generate a unique reference
-        reference = f"LX-{uuid.uuid4().hex[:12].upper()}"
         amount_in_kobo = int(course.price * 100)
+        
+        if amount_in_kobo == 0:
+            Enrollment.objects.get_or_create(user=request.user, course=course)
+            return Response({'free': True, 'message': 'Enrolled in free course.'})
+
+        reference = f"LX-{uuid.uuid4().hex[:12].upper()}"
 
         # Initialize transaction with Paystack
         auth_url = initialize_transaction(request.user.email, amount_in_kobo, reference)
