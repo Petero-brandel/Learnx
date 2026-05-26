@@ -198,3 +198,18 @@ class MyEnrollmentsView(views.APIView):
             })
             
         return Response(data, status=status.HTTP_200_OK)
+
+
+class CheckEnrollmentView(views.APIView):
+    """Lightweight endpoint: GET /payments/check-enrollment/<course_id>/
+    Returns {enrolled: true/false} with a single targeted query."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id, *args, **kwargs):
+        enrolled = Enrollment.objects.filter(
+            user=request.user,
+            course_id=course_id,
+            is_active=True,
+        ).exists()
+        return Response({'enrolled': enrolled}, status=status.HTTP_200_OK)
+

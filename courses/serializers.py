@@ -203,7 +203,8 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    modules = ModuleSerializer(many=True, read_only=True)
+    module_count = serializers.IntegerField(read_only=True)
+    lesson_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Course
@@ -217,7 +218,8 @@ class CourseListSerializer(serializers.ModelSerializer):
             'preview_video_id',
             'is_published',
             'created_at',
-            'modules'
+            'module_count',
+            'lesson_count',
         ]
 
 

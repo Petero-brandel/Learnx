@@ -3,6 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from django.db.models import Count
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from .models import Course, Module, Lesson, Quiz, Question, Answer, QuizAttempt
 from .serializers import (
     CourseListSerializer, CourseDetailSerializer, 
@@ -18,17 +21,34 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly] # Admin handles create/update, public can read
     lookup_field = 'slug'
 
+    @method_decorator(cache_page(300))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+        
     def get_serializer_class(self): 
         if self.action == 'list':
             return CourseListSerializer
         return CourseDetailSerializer
 
     def get_queryset(self):
-        # Public users only see published courses. Admin sees all.
-        queryset = Course.objects.prefetch_related('modules__lessons')
-        if self.request.user.is_staff:
-            return queryset
-        return queryset.filter(is_published=True)
+        queryset = Course.objects.all()
+
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(is_published=True)
+
+        if self.action == 'list':
+            # Annotate counts instead of nesting full objects — single SQL query
+            queryset = queryset.annotate(
+                module_count=Count('modules', distinct=True),
+                lesson_count=Count('modules__lessons', distinct=True),
+            )
+        else:
+            # Detail view: prefetch the full tree efficiently
+            queryset = queryset.prefetch_related(
+                'modules__lessons__quiz__questions__answers'
+            )
+
+        return queryset
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def request_course_upload_url(self, request, slug=None):
