@@ -23,6 +23,10 @@ class CheckoutView(views.APIView):
         if not course.is_published:
             return Response({'error': 'This course is not available for enrollment yet.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if user is already enrolled
+        if Enrollment.objects.filter(user=request.user, course=course, is_active=True).exists():
+            return Response({'code': 'already_enrolled', 'error': 'You are already enrolled in this course.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Generate a unique reference
         amount_in_kobo = int(course.price * 100)
         

@@ -1,40 +1,37 @@
-```django
 {% extends 'emails/base.html' %}
-
 {% block content %}
 
-<h2 style="margin-top: 0; margin-bottom: 18px; font-size: 28px; line-height: 1.3; color: #111827; font-weight: 700;">
-    Your certificate is ready.
-</h2>
+<p style="margin-top: 0; margin-bottom: 24px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2563eb;">Certificate of Completion</p>
+
+<p>Hi {{ user.full_name|default:"There" }},</p>
 
 <p>
-    Hi {{ user.first_name|default:user.email }},
-</p>
-
-<p>
-    Congratulations on completing <strong>{{ course.title }}</strong>.
+    You've completed <strong>{{ course.title }}</strong>. That's a real milestone — not everyone who starts a course sees it through to the end.
 </p>
 
 <p>
-    You've successfully finished the course requirements, and your certificate of completion is attached to this email.
+    Your certificate of completion is attached to this email. Download and save a copy for your records.
 </p>
 
-<div style="margin: 32px 0; padding: 18px 20px; background-color: #eff6ff; border: 1px solid #dbeafe; border-radius: 10px; color: #1e3a8a;">
-    This certificate can be added directly to your LinkedIn profile under
-    <strong>Licenses & Certifications</strong>.
-</div>
+<a href="{{ certificate_url }}" class="btn">Download Certificate</a>
+
+<div class="divider"></div>
+
+<p style="margin-bottom: 10px;"><strong>Add it to your LinkedIn profile</strong></p>
+<p style="color: #71717a; font-size: 14px; margin-bottom: 8px;">
+    Log in to LinkedIn and go to your profile. Select <strong>Add section</strong>, then choose <strong>Licenses &amp; Certifications</strong>. Use the details on your certificate to fill in the fields.
+</p>
+<p style="color: #71717a; font-size: 14px;">
+    Issuer name: <strong>Bluedemy</strong>
+</p>
+
+<div class="divider"></div>
 
 <p>
-    Most people start courses. Very few actually finish them.
+    What's next for you? Browse the course library and keep the momentum going.
 </p>
 
-<p>
-    Good work putting in the time.
-</p>
-
-<p style="margin-top: 32px;">
-    - Coach Izu
-</p>
+<p>Well done,</p>
+<p style="margin: 0;"><strong>Coach Izu</strong><br><span style="color: #71717a; font-size: 14px;">Bluedemy</span></p>
 
 {% endblock %}
-```
