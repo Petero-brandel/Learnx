@@ -32,8 +32,10 @@ def generate_certificate_task(user_id, course_id):
         # Generate PDF
         date_str = datetime.now().strftime("%B %d, %Y")
 
+        student_name = user.full_name if user.full_name else "Student"
+
         pdf_file = create_certificate_pdf(
-            user.get_full_name(),
+            student_name,
             course.title,
             date_str,
             cert.certificate_id
