@@ -219,18 +219,6 @@ REST_FRAMEWORK = {
 }
 
 # ---------------------------------------------------
-# CACHING
-# ---------------------------------------------------
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'learnx-cache',
-        'TIMEOUT': 300,  # 5 minutes default
-    }
-}
-
-# ---------------------------------------------------
 # SIMPLE JWT
 # ---------------------------------------------------
 
@@ -245,7 +233,7 @@ SIMPLE_JWT = {
 # ---------------------------------------------------
 
 Q_CLUSTER = {
-    "name": "LearnXCluster",
+    "name": "BluedemyCluster",
     "workers": 4,
     "recycle": 500,
     "timeout": 60,
@@ -401,7 +389,7 @@ EMAIL_HOST_PASSWORD = os.environ.get(
 
 DEFAULT_FROM_EMAIL = os.environ.get(
     "DEFAULT_FROM_EMAIL",
-    "LearnX Academy <support@contact.bluedemy.org>"
+    "noreply@contact.bluedemy.org"
 )
 
 # ---------------------------------------------------

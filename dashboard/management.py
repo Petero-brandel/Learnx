@@ -8,6 +8,7 @@ from django.conf import settings
 
 from payments.models import Payment, Enrollment
 from courses.models import Course
+from .models import BroadcastHistory
 
 User = get_user_model()
 
@@ -69,16 +70,18 @@ class ManualCertificateView(views.APIView):
 
 def bulk_email_worker(subject, body, user_ids):
     users = User.objects.filter(id__in=user_ids)
-    recipient_list = [u.email for u in users]
     
-    # Send email
-    send_mail(
-        subject=subject,
-        message=body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=recipient_list,
-        fail_silently=False,
-    )
+    # Prepare individual emails for send_mass_mail
+    # This prevents putting everyone in the same "To" field
+    # and prevents one suppressed email from failing the whole batch
+    messages = [
+        (subject, body, settings.DEFAULT_FROM_EMAIL, [user.email])
+        for user in users
+    ]
+    
+    # Send emails individually but using a single connection
+    from django.core.mail import send_mass_mail
+    send_mass_mail(messages, fail_silently=False)
     
     # Create in-app notifications
     from notifications.models import Notification
@@ -107,18 +110,48 @@ class BroadcastEmailView(views.APIView):
             user_ids = list(User.objects.values_list('id', flat=True))
         else:
             try:
-                course_id = int(target_audience)
-                user_ids = list(Enrollment.objects.filter(course_id=course_id).values_list('user_id', flat=True))
-            except ValueError:
+                if isinstance(target_audience, list):
+                    course_ids = [int(x) for x in target_audience if x]
+                    target_audience_str = ",".join(map(str, course_ids))
+                else:
+                    course_ids = [int(x) for x in target_audience.split(',') if x]
+                    target_audience_str = target_audience
+
+                user_ids = list(Enrollment.objects.filter(course_id__in=course_ids).values_list('user_id', flat=True).distinct())
+                target_audience = target_audience_str
+            except (ValueError, AttributeError):
                 return Response({'error': 'Invalid target audience.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not user_ids:
             return Response({'error': 'No users found for the target audience.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Save history
+        BroadcastHistory.objects.create(
+            subject=subject,
+            body=body,
+            target_audience=target_audience,
+            recipients_count=len(user_ids)
+        )
+
         # Queue the mass email to avoid blocking the API
         async_task('dashboard.management.bulk_email_worker', subject, body, user_ids)
         
         return Response({'status': f'Broadcast queued for {len(user_ids)} students.'}, status=status.HTTP_200_OK)
+
+class BroadcastHistoryView(views.APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        history = BroadcastHistory.objects.all()
+        data = [{
+            'id': h.id,
+            'subject': h.subject,
+            'body': h.body,
+            'target_audience': h.target_audience,
+            'recipients_count': h.recipients_count,
+            'sent_at': h.sent_at
+        } for h in history]
+        return Response(data)
 
 class EnrollmentManagementView(views.APIView):
     permission_classes = [IsAdminUser]

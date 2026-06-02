@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,102 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark">
     <meta name="supported-color-schemes" content="light dark">
-
     <style>
         :root {
             color-scheme: light dark;
-            supported-color-schemes: light dark;
         }
-
         body {
             margin: 0;
             padding: 0;
-            background-color: #f5f7fb;
+            background-color: #f4f4f5;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
                 Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
         }
-
         table {
             border-spacing: 0;
         }
-
         td {
             padding: 0;
         }
-
         img {
             border: 0;
         }
-
         .wrapper {
             width: 100%;
             table-layout: fixed;
-            background-color: #f5f7fb;
-            padding: 32px 16px;
+            background-color: #f4f4f5;
+            padding: 40px 16px;
         }
-
         .container {
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            overflow: hidden;
+            border: 1px solid #e4e4e7;
         }
-
         .header {
-            padding: 32px 40px 20px;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 28px 40px;
+            border-bottom: 2px solid #2563eb;
         }
-
         .brand {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.01em;
             color: #2563eb;
             margin: 0;
         }
-
         .content {
             padding: 40px;
-            color: #111827;
-            font-size: 16px;
-            line-height: 1.7;
+            color: #18181b;
+            font-size: 15px;
+            line-height: 1.75;
         }
-
         .content p {
-            margin: 0 0 18px;
+            margin: 0 0 16px;
         }
-
+        .content p:last-child {
+            margin-bottom: 0;
+        }
         .btn {
             display: inline-block;
             background-color: #2563eb;
             color: #ffffff !important;
             text-decoration: none;
-            padding: 14px 22px;
-            border-radius: 10px;
-            font-size: 15px;
+            padding: 12px 24px;
+            font-size: 14px;
             font-weight: 600;
-            margin-top: 10px;
+            letter-spacing: 0.01em;
+            margin-top: 8px;
         }
-
+        .divider {
+            height: 1px;
+            background-color: #e4e4e7;
+            margin: 28px 0;
+        }
         .footer {
-            padding: 24px 40px 36px;
-            border-top: 1px solid #f1f5f9;
-            color: #6b7280;
-            font-size: 13px;
+            padding: 24px 40px 32px;
+            border-top: 1px solid #e4e4e7;
+            color: #71717a;
+            font-size: 12px;
             line-height: 1.6;
         }
-
         .footer p {
-            margin: 0 0 8px;
+            margin: 0 0 6px;
         }
-
-        .muted {
-            color: #6b7280;
+        .footer p:last-child {
+            margin-bottom: 0;
         }
 
         @media only screen and (max-width: 640px) {
@@ -111,44 +99,36 @@
                 padding-left: 24px !important;
                 padding-right: 24px !important;
             }
-
             .wrapper {
-                padding: 16px 10px !important;
+                padding: 24px 12px !important;
             }
         }
 
         @media (prefers-color-scheme: dark) {
             body,
             .wrapper {
-                background-color: #0f172a !important;
+                background-color: #09090b !important;
             }
-
             .container {
-                background-color: #111827 !important;
-                border-color: #1f2937 !important;
+                background-color: #18181b !important;
+                border-color: #27272a !important;
             }
-
             .header {
-                border-bottom-color: #1f2937 !important;
+                border-bottom-color: #2563eb !important;
             }
-
             .content {
-                color: #f3f4f6 !important;
+                color: #f4f4f5 !important;
             }
-
-            .footer,
-            .muted {
-                color: #9ca3af !important;
+            .divider {
+                background-color: #27272a !important;
             }
-
             .footer {
-                border-top-color: #1f2937 !important;
+                color: #71717a !important;
+                border-top-color: #27272a !important;
             }
-
             .brand {
                 color: #3b82f6 !important;
             }
-
             .btn {
                 background-color: #2563eb !important;
                 color: #ffffff !important;
@@ -156,13 +136,12 @@
         }
     </style>
 </head>
-
 <body>
     <div class="wrapper">
         <div class="container">
 
             <div class="header">
-                <h1 class="brand">Bluedemy</h1>
+                <p class="brand">Bluedemy</p>
             </div>
 
             <div class="content">
@@ -172,18 +151,11 @@
 
             <div class="footer">
                 <p>&copy; {% now "Y" %} Bluedemy. All rights reserved.</p>
-
-                <p class="muted">
-                    You're receiving this email because you have an account on Bluedemy.
-                </p>
-
-                <p class="muted">
-                    Need help? Simply reply to this email.
-                </p>
+                <p>You received this because you have an account on Bluedemy.</p>
+                <p>Questions? Reply to this email and we'll help.</p>
             </div>
 
         </div>
     </div>
 </body>
 </html>
-```

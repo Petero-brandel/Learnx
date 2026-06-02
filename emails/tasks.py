@@ -127,7 +127,7 @@ def send_welcome_email_task(user_id):
     login_url = f"{FRONTEND_URL}/login"
 
     send_html_email(
-        subject="Welcome to LearnX!",
+        subject="Welcome to Bluedemy!",
         template_name="welcome.html",
         context={
             'user': user,
@@ -196,7 +196,7 @@ def send_verification_email_task(user_id):
     )
 
     send_html_email(
-        subject="Verify your LearnX account email",
+        subject="Verify your Bluedemy account email",
         template_name="verification.html",
         context={
             'user': user,
@@ -221,7 +221,7 @@ def send_password_reset_email_task(
     )
 
     send_html_email(
-        subject="Reset your LearnX password",
+        subject="Reset your Bluedemy password",
         template_name="password_reset.html",
         context={
             'user': user,

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment, Enrollment
+from .models import Payment, Enrollment, LessonProgress
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
@@ -13,3 +13,5 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ('user', 'course', 'progress_percentage', 'enrolled_at')
     list_filter = ('enrolled_at',)
     search_fields = ('user__email', 'course__title')
+
+admin.site.register(LessonProgress)

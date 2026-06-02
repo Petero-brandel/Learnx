@@ -10,7 +10,7 @@ primary_region = 'jnb'
   dockerfile = 'Dockerfile'
 
 [deploy]
-  release_command = 'sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput"'
+  release_command = 'python manage.py migrate --noinput'
 
 [http_service]
   internal_port = 8000

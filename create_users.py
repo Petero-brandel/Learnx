@@ -11,23 +11,25 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 def create_users():
-    if not User.objects.filter(email='admin@learnx.com').exists():
+    # 1. Create Superuser (Admin)
+    if not User.objects.filter(email='admin@bluedemy.org').exists():
         User.objects.create_superuser(
-            email='admin@learnx.com',
-            password='adminpassword123',
+            email='admin@bluedemy.org',
+            password='password123',
             full_name='Admin User'
         )
-        logger.info("Superuser admin@learnx.com created.")
+        logger.info("Superuser admin@bluedemy.org created.")
     else:
         logger.info("Superuser already exists.")
 
-    if not User.objects.filter(email='student@learnx.com').exists():
+    # 2. Create Regular Student
+    if not User.objects.filter(email='student@bluedemy.org').exists():
         User.objects.create_user(
-            email='student@learnx.com',
-            password='studentpassword123',
-            full_name='Student User'
+            email='student@bluedemy.org',
+            password='password123',
+            full_name='Test Student'
         )
-        logger.info("User student@learnx.com created.")
+        logger.info("User student@bluedemy.org created.")
     else:
         logger.info("User already exists.")
 

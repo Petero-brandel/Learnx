@@ -59,7 +59,7 @@ def create_welcome_notification(sender, instance, created, **kwargs):
         # 1. Welcome the student
         Notification.objects.create(
             user=instance,
-            title="Welcome to LearnX! 🎉",
+            title="Welcome to Bluedemy! 🎉",
             message="We are thrilled to have you here. Browse our courses and start learning today!",
             notification_type='system'
         )

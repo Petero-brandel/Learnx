@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Module, Lesson
+from .models import Course, Module, Lesson, Quiz, Question, Answer, QuizAttempt
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
@@ -19,3 +19,8 @@ class LessonAdmin(admin.ModelAdmin):
     list_display = ('title', 'module', 'content_type', 'is_preview', 'order')
     list_filter = ('content_type', 'is_preview', 'module__course')
     search_fields = ('title',)
+
+admin.site.register(Quiz)
+admin.site.register(Question)
+admin.site.register(Answer)
+admin.site.register(QuizAttempt)
