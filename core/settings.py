@@ -64,8 +64,8 @@ DEBUG = os.environ.get("DEBUG", "False").lower() in [
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "learnx-app.fly.dev",
-    ".fly.dev",
+    "bluedemy-api.fly.dev",
+    "engine.bluedemy.org",
 ]
 
 # ---------------------------------------------------
@@ -144,6 +144,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "https://bluedemy.org",
     "https://www.bluedemy.org",
+    "https://engine.bluedemy.org",
     "http://localhost:3000",
 ]
 
@@ -156,6 +157,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "https://bluedemy.org",
     "https://www.bluedemy.org",
+    "https://engine.bluedemy.org",
+    "https://bluedemy-api.fly.dev",
 ]
 
 # ---------------------------------------------------
